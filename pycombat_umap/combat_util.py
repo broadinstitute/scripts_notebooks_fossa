@@ -47,7 +47,7 @@ def pycombat_generator(df, well_column = 'Metadata_Well', batch_column = 'Metada
     
     return df_corr
 
-def generate_x_y_umap(df, n_neighbors = 5, min_dist = 0.1):
+def generate_x_y_umap(df, n_neighbors = 5, min_dist = 0.1, metric='euclidean'):
     """
     This function will generate an X and y from the inputed dataframe and fit_transform based on the parameters specified
     *df (DataFrame): df containing the features as columns and samples as rows;
@@ -63,7 +63,7 @@ def generate_x_y_umap(df, n_neighbors = 5, min_dist = 0.1):
     X = pd.DataFrame(df, columns=feat)
     y = pd.DataFrame(df, columns=meta)
 
-    umap_2d = UMAP(n_neighbors=n_neighbors, min_dist=min_dist, n_components=2, init='random', random_state=0)
+    umap_2d = UMAP(n_neighbors=n_neighbors, min_dist=min_dist, n_components=2, init='random', random_state=0, metric=metric)
     umap_2d.fit(X)
     projections = umap_2d.transform(X)
 
@@ -73,7 +73,7 @@ def generate_x_y_umap(df, n_neighbors = 5, min_dist = 0.1):
 
     return umap_df
 
-def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = None, np = None, discrete = False, size=False, size_col = None, umap_param=False, neighbor=None, mindist=None):
+def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = None, np = None, discrete = False, size=False, size_col = None, umap_param=False, neighbor=None, mindist=None, compound_color=False, time_color=False):
     """
     Plot UMAP components to visualize results using plotly scatter function. Various parameters are optional to choose and customize the plots.
     
@@ -95,6 +95,8 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
     *size (bool): if True, use the values of a column to determine the size of the scatter points.
         size_col (str): provide the name of the column being used as the size denominator. 
     """
+    label_legend = color_col
+
     if split_df:
         df = df_plot[df_plot[split_column] == np].reset_index()
         title_plot = np
@@ -111,18 +113,25 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
 
     if discrete:
         df['colors_plot_col'] = df[color_col].astype(str)
-        color_sequence = px.colors.sequential.RdBu
+        color_sequence = px.colors.sequential.Plasma
+        if compound_color:
+            color_sequence = px.colors.sequential.Hot
+        if time_color:
+            color_sequence = ['royalblue', 'green','orange','red']
+            label_legend = 'Time of cell recovery<br>after AgNP treatment<br>(in days)'
     else:
         df['colors_plot_col'] = df[color_col]
         color_sequence = px.colors.qualitative.Vivid
 
     if size:
         df['Metadata_size'] = df[size_col].astype(int)
-        df.sort_values('Metadata_size', inplace=True)
+        title_plot = 'Size defined by '+ size_col
+        if not time_color:
+            df.sort_values('Metadata_size', inplace=True)
 
         fig = px.scatter(
         df, x='0', y='1',
-        color='colors_plot_col', labels={'color': color_col},
+        color='colors_plot_col',
         hover_data=hover_cols,
         color_continuous_scale=px.colors.sequential.Bluered,
         color_discrete_sequence=color_sequence,
@@ -131,7 +140,7 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
     else:
         fig = px.scatter(
         df, x='0', y='1',
-        color='colors_plot_col', labels={'color': color_col},
+        color='colors_plot_col',
         hover_data=hover_cols,
         color_continuous_scale=px.colors.sequential.Bluered,
         color_discrete_sequence=color_sequence
@@ -166,7 +175,7 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
               ),
         font=dict(
         size=18),
-        legend_title=color_col,
+        legend_title=label_legend,
         title=title_plot,
         autosize=False,
         width=900,
