@@ -5,7 +5,7 @@ from umap import UMAP
 from combat.pycombat import pycombat
 import pandas as pd
 
-def pycombat_generator(df, well_column = 'Metadata_Well', batch_column = 'Metadata_Plate'):
+def pycombat_generator(df, well_column = 'Metadata_Well', batch_column = 'Metadata_Plate', noncanonical_features=False):
     """
     This function will take the DataFrame containing features (columns) and samples (rows), transpose it to have the samples as the columns with a common denominator.
     For example, if the Metadata_Plate is the batch column, then the name of the tranposed columns will be the Metadata_Well + Metadata_Plate. 
@@ -21,8 +21,12 @@ def pycombat_generator(df, well_column = 'Metadata_Well', batch_column = 'Metada
     df['Metadata_TranposedSamples'] = df[well_column].astype(str) + '_' + df[batch_column].astype(str)
     
     #get list of metadata and features columns
-    list_feats = pycytominer.cyto_utils.infer_cp_features(df, metadata=False)
     list_metadata = pycytominer.cyto_utils.infer_cp_features(df, metadata=True)
+    if noncanonical_features:
+        list_feats = [x for x in df.columns.tolist() if x not in list_metadata]
+    else:
+        list_feats = pycytominer.cyto_utils.infer_cp_features(df, metadata=False)
+    
     
     #set a new index to the df based on Metadata_TranposedSamples and transpose it 
     df_T = df[list_feats].reset_index(drop=True).set_index(df['Metadata_TranposedSamples']).T
@@ -47,7 +51,7 @@ def pycombat_generator(df, well_column = 'Metadata_Well', batch_column = 'Metada
     
     return df_corr
 
-def generate_x_y_umap(df, n_neighbors = 5, min_dist = 0.1, metric='euclidean'):
+def generate_x_y_umap(df, n_neighbors = 5, min_dist = 0.1, n_components = 2, metric='cosine', noncanonical_features=False):
     """
     This function will generate an X and y from the inputed dataframe and fit_transform based on the parameters specified
     *df (DataFrame): df containing the features as columns and samples as rows;
@@ -58,22 +62,28 @@ def generate_x_y_umap(df, n_neighbors = 5, min_dist = 0.1, metric='euclidean'):
     *col (str): 
     """
 
-    feat = pycytominer.cyto_utils.features.infer_cp_features(df, metadata=False)
     meta = pycytominer.cyto_utils.features.infer_cp_features(df, metadata=True)
+    if noncanonical_features:
+        feat = [x for x in df.columns.tolist() if x not in meta]
+    else:
+        feat = pycytominer.cyto_utils.features.infer_cp_features(df, metadata=False)
+        
     X = pd.DataFrame(df, columns=feat)
     y = pd.DataFrame(df, columns=meta)
 
-    umap_2d = UMAP(n_neighbors=n_neighbors, min_dist=min_dist, n_components=2, init='random', random_state=0, metric=metric)
+    umap_2d = UMAP(n_neighbors=n_neighbors, min_dist=min_dist, n_components=n_components, init='random', random_state=0, metric=metric)
     umap_2d.fit(X)
     projections = umap_2d.transform(X)
+    columns = [str(x) for x in range(0, n_components)]
 
-    proj_df = pd.DataFrame(data=projections, columns=['0', '1'])
+    proj_df = pd.DataFrame(data=projections, columns=columns)
 
     umap_df = pd.concat([proj_df, y], axis='columns')
 
     return umap_df
 
-def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = None, np = None, discrete = False, size=False, size_col = None, umap_param=False, neighbor=None, mindist=None, compound_color=False, time_color=False):
+def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = None, np = None, discrete = False, size=False, size_col = None, umap_param=False, neighbor=None, mindist=None, compound_color=False, time_color=False, dili_color=False,
+              x="0", y="1"):
     """
     Plot UMAP components to visualize results using plotly scatter function. Various parameters are optional to choose and customize the plots.
     
@@ -93,10 +103,13 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
         *neighbor (int): number used as n_neighbors
         *mindist (int): number used as min_dist
     *size (bool): if True, use the values of a column to determine the size of the scatter points.
-        size_col (str): provide the name of the column being used as the size denominator. 
+        size_col (str): provide the name of the column being used as the size denominator.
+    *compound_color (bool): 
+    *time_color (bool): if plotting Cell Recovery data, use this colormap to the 4 timepoints available in this dataset. 
+    *dili_color (bool): if plotting DILI experiments results, use the color sequence previously defined on a dictionary. Used to maintain the same pattern across plots.
     """
     label_legend = color_col
-
+    color_discrete={}
     if split_df:
         df = df_plot[df_plot[split_column] == np].reset_index()
         title_plot = np
@@ -119,6 +132,12 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
         if time_color:
             color_sequence = ['royalblue', 'green','orange','red']
             label_legend = 'Time of cell recovery<br>after AgNP treatment<br>(in days)'
+    elif dili_color:
+        df['colors_plot_col'] = df[color_col]
+        color_discrete = {"Aspirin": 'rgb(229, 134, 6)', 'Amiodarone': 'rgb(93, 105, 177)', "Cyclophosphamide": 'rgb(82, 188, 163)', "Etoposide": 'rgb(153, 201, 69)',
+                  "Vehicle-ETP":'rgb(204, 97, 176)', "Non-treated":'rgb(36, 121, 108)', "Lovastatin":'rgb(218, 165, 27)', "Orphenadrine":'rgb(47, 138, 196)',
+                  "Tetracycline":'rgb(118, 78, 159)', "DMSO":'rgb(237, 100, 90)', "Lactose":'rgb(165, 170, 153)'}
+        color_sequence = px.colors.qualitative.Vivid
     else:
         df['colors_plot_col'] = df[color_col]
         color_sequence = px.colors.qualitative.Vivid
@@ -128,24 +147,33 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
         title_plot = 'Size defined by '+ size_col
         if not time_color:
             df.sort_values('Metadata_size', inplace=True)
-
-        fig = px.scatter(
-        df, x='0', y='1',
-        color='colors_plot_col',
-        hover_data=hover_cols,
-        color_continuous_scale=px.colors.sequential.Bluered,
-        color_discrete_sequence=color_sequence,
-        size='Metadata_size'
-        )
+        if dili_color:
+            fig = px.scatter(
+            df, x=x, y=y,
+            color='colors_plot_col',
+            hover_data=hover_cols,
+            color_continuous_scale=px.colors.sequential.Bluered,
+            size='Metadata_size',
+            color_discrete_map=color_discrete
+            )
+        else:
+            fig = px.scatter(
+            df, x=x, y=y,
+            color='colors_plot_col',
+            hover_data=hover_cols,
+            color_continuous_scale=px.colors.sequential.Bluered,
+            size='Metadata_size',
+            color_discrete_sequence=color_sequence
+            )
     else:
         fig = px.scatter(
-        df, x='0', y='1',
+        df, x=x, y=y,
         color='colors_plot_col',
         hover_data=hover_cols,
         color_continuous_scale=px.colors.sequential.Bluered,
         color_discrete_sequence=color_sequence
         )
-        fig.update_traces(marker={'size': 8})
+        fig.update_traces(marker={'size': 12})
 
     fig.update_layout(
         dict(updatemenus=[
@@ -189,9 +217,9 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
         )
         )
 
-    fig.show("notebook")
+    # fig.show("notebook")
 
-    return
+    return fig.show("notebook")
 
 def umap_search(df, n_neighbors_list = [5, 15, 30, 50], min_dist_list = [0, 0.01, 0.05, 0.1, 0.5, 1]):
     """
@@ -222,3 +250,61 @@ def seaborn_plot(df, color_col ='Metadata_Plate'):
     plt.legend(loc="upper right", frameon=True, fontsize=font_size)
     plt.show()
     return
+
+def generate_batch_col(df, rows=False,
+                       columns=False, 
+                       change_default_dict = False,
+                       dict_change = None,
+                       join_plate=False):
+    """
+    Based on the Metadata_Well column, get the number of the columns in the plate (2, 3, 4...) and generate a batch_column containing the index that represents each batch (1, 2, 3...).
+    Provide a dictionary containing the batch you'd like to consider from the dictionary.
+    *dict_columns (default dict): {'2':0, '3':1, '4':2, '5':3, '6':4, '7':5, '8':6, '9':7, '10':8, '11':9}
+    *dict_rows (default dict): {'B':0, 'C':1, 'D':2, 'E':3, 'F':4, 'G':5}
+    """
+    import re
+    well_list = df['Metadata_Well'].tolist()
+    get_values = []
+    for wells in well_list:
+        splited = re.split('(\d+)',wells)
+        if columns:
+            get_values.append(splited[1])
+        if rows:
+            get_values.append(splited[0])
+    df['Metadata_values'] = get_values
+
+    if not change_default_dict:
+        if rows:
+            dict_change = {'B':0, 'C':1, 'D':2, 'E':3, 'F':4, 'G':5}
+        if columns:
+            dict_change = {'2':0, '3':1, '4':2, '5':3, '6':4, '7':5, '8':6, '9':7, '10':8, '11':9}
+
+    df['Metadata_batch_col'] = df['Metadata_values']
+    df.replace({'Metadata_batch_col':dict_change}, inplace=True)
+
+    if join_plate:
+        df['Metadata_batch_pycombat'] = df['Metadata_batch_col'].astype(str) + '_' + df['Metadata_Plate']
+    else:
+        df['Metadata_batch_pycombat'] = df['Metadata_batch_col']
+    
+    # print(df['Metadata_batch_pycombat'])
+
+    return df
+
+def col_generator(df, cols_to_join = ['Metadata_Compound', 'Metadata_Concentration']):
+    """
+    Create a new column containing information from compound + concentration of compounds
+    *cols_to_join: provide columns names to join on, order will be determined by order in this list
+    """
+    col_copy = cols_to_join.copy()
+    init = cols_to_join.pop(0) #pop the first element of the list
+    new_col_temp = [init] #keep the first element in the list
+    for cols in cols_to_join:
+        temp = cols.split("_", 1) #only split metadata out
+        print(temp[1])
+        new_col_temp.append(temp[1])
+    new_col = ('_'.join(new_col_temp))  #generate the new column name from the list
+    df[new_col] = df[col_copy].astype(str).agg(' '.join, axis=1) #transform the column to str and create new metadata
+    print("Names of the compounds + concentration: ",  df[new_col].unique())
+
+    return df, new_col
