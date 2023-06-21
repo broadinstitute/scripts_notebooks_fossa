@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: scripts-fossa
+Version: 1.0
+Summary: Scripts to run PhD analysis.
+Home-page: https://github.com/broadinstitute/scripts_notebooks_fossa
+Author: Fernanda Fossa
+Author-email: fefossa@gmail.com
+License-File: LICENSE

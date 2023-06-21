@@ -1,0 +1,7 @@
+LICENSE
+README.md
+setup.py
+scripts_fossa.egg-info/PKG-INFO
+scripts_fossa.egg-info/SOURCES.txt
+scripts_fossa.egg-info/dependency_links.txt
+scripts_fossa.egg-info/top_level.txt
