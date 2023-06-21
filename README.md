@@ -22,3 +22,16 @@ pip install -e .
 
 Inside each folder, there is an example notebook and an overall description.
 
+To use any function inside a notebook, paste the following and run the cell:
+
+```
+%cd G:\My Drive\GitHub\scripts_notebooks_fossa
+%pip install -e .
+```
+
+To import a utilitary file from any folder, for example:
+
+```
+from pycombat_umap import combat_util
+```
+
