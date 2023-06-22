@@ -73,7 +73,13 @@ Give the main folder as an input, and looks in the subdirectories to find the fi
 **correlation_matrix folder:** 
 Here we have functions to calculate and generate a Pearson correlation matrix per plate or per dataset. 
 
+<img src="https://github.com/broadinstitute/scripts_notebooks_fossa/assets/48028636/c7564db3-deb3-492c-b643-65196e0f017a" width=50% height=50%>
+
 
 ### 5. Dose-response (IC50)
 **dose_response folder:** 
 Create a dose-response curve based on concentration and cell viability values. Using linear regression, we calculate the linear function that represents that curve and get the IC50 (Inhibitory Concentration of 50% of the population). 
+
+<img src="https://github.com/broadinstitute/scripts_notebooks_fossa/assets/48028636/bfb49eee-7c3c-4f8f-8ac4-1643709adfdd" width=50% height=50%>
+
+
