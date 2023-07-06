@@ -221,6 +221,146 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
 
     return fig.show("notebook")
 
+def plot_umap_3d(df_plot, color_col, hover_cols, split_df = False, split_column = None, np = None, discrete = False, size=False, size_col = None, umap_param=False, neighbor=None, mindist=None, compound_color=False, time_color=False, dili_color=False,
+              x="0", y="1", z="2"):
+    """
+    Plot UMAP components to visualize results using plotly scatter function. Various parameters are optional to choose and customize the plots.
+    
+    Inputs
+    *df_plot (DataFrame): df that contains labels for each row and the 0 and 1 vector for UMAP plot. 
+    *color_col (str): column that will give the color coding for the plot.
+    *hover_cols (list): which columns will show information when hovering over the points.
+    
+    Optional
+    *split_df (bool): True if want to filter the df based on a column
+    *split_column (str): name of the column you'd like the split to occur
+    *np (str): the name of the sample you'd like to plot that's inside the split_column
+    *discrete (bool): True to plot a discrete distribution with a continuous color sequence 
+        - In cases where you'd have a range of concentrations and you'd like each one to show as individual points,
+        but with a gradient color scheme.     
+    *umap_param (bool): if True, it will change the title to have the number of neighbors and min_dist parameters from umap displayed.
+        *neighbor (int): number used as n_neighbors
+        *mindist (int): number used as min_dist
+    *size (bool): if True, use the values of a column to determine the size of the scatter points.
+        size_col (str): provide the name of the column being used as the size denominator.
+    *compound_color (bool): 
+    *time_color (bool): if plotting Cell Recovery data, use this colormap to the 4 timepoints available in this dataset. 
+    *dili_color (bool): if plotting DILI experiments results, use the color sequence previously defined on a dictionary. Used to maintain the same pattern across plots.
+    """
+    label_legend = color_col
+    color_discrete={}
+    if split_df:
+        df = df_plot[df_plot[split_column] == np].reset_index()
+        title_plot = np
+        if umap_param:
+            title_plot = np + ' N: ' + str(neighbor) + ' M: ' + str(mindist)
+    else:
+        df = df_plot.copy()
+        title_plot = 'Labeled by '+ color_col
+        if umap_param:
+            title_plot = 'N: ' + str(neighbor) + ' M: ' + str(mindist)
+    #if the color_col is a int, sort the columns by value
+    if df[color_col].map(type).eq(int).any():
+        df.sort_values(color_col, inplace=True)
+
+    if discrete:
+        df['colors_plot_col'] = df[color_col].astype(str)
+        color_sequence = px.colors.sequential.Plasma
+        if compound_color:
+            color_sequence = px.colors.sequential.Hot
+        if time_color:
+            color_sequence = ['royalblue', 'green','orange','red']
+            label_legend = 'Time of cell recovery<br>after AgNP treatment<br>(in days)'
+    elif dili_color:
+        df['colors_plot_col'] = df[color_col]
+        color_discrete = {"Aspirin": 'rgb(229, 134, 6)', 'Amiodarone': 'rgb(93, 105, 177)', "Cyclophosphamide": 'rgb(82, 188, 163)', "Etoposide": 'rgb(153, 201, 69)',
+                  "Vehicle-ETP":'rgb(204, 97, 176)', "Non-treated":'rgb(36, 121, 108)', "Lovastatin":'rgb(218, 165, 27)', "Orphenadrine":'rgb(47, 138, 196)',
+                  "Tetracycline":'rgb(118, 78, 159)', "DMSO":'rgb(237, 100, 90)', "Lactose":'rgb(165, 170, 153)'}
+        color_sequence = px.colors.qualitative.Vivid
+    else:
+        df['colors_plot_col'] = df[color_col]
+        color_sequence = px.colors.qualitative.Vivid
+
+    if size:
+        df['Metadata_size'] = df[size_col].astype(int)
+        title_plot = 'Size defined by '+ size_col
+        if not time_color:
+            df.sort_values('Metadata_size', inplace=True)
+        if dili_color:
+            fig = px.scatter_3d(
+            df, x=x, y=y, z=z,
+            color='colors_plot_col',
+            hover_data=hover_cols,
+            color_continuous_scale=px.colors.sequential.Bluered,
+            size='Metadata_size',
+            color_discrete_map=color_discrete
+            )
+        else:
+            fig = px.scatter_3d(
+            df, x=x, y=y, z=z,
+            color='colors_plot_col',
+            hover_data=hover_cols,
+            color_continuous_scale=px.colors.sequential.Bluered,
+            size='Metadata_size',
+            color_discrete_sequence=color_sequence
+            )
+    else:
+        fig = px.scatter_3d(
+        df, x=x, y=y, z=z,
+        color='colors_plot_col',
+        hover_data=hover_cols,
+        color_continuous_scale=px.colors.sequential.Bluered,
+        color_discrete_sequence=color_sequence
+        )
+        fig.update_traces(marker={'size': 12})
+
+    fig.update_layout(
+        dict(updatemenus=[
+                        dict(
+                            type = "buttons",
+                            direction = "left",
+                            buttons=list([
+                                dict(
+                                    args=["visible", "legendonly"],
+                                    label="Deselect All",
+                                    method="restyle"
+                                ),
+                                dict(
+                                    args=["visible", True],
+                                    label="Select All",
+                                    method="restyle"
+                                )
+                            ]),
+                            pad={"r": 5, "t": 5},
+                            showactive=True,
+                            x=1,
+                            xanchor="left",
+                            y=1.1,
+                            yanchor="top"
+                        ),
+                    ]
+              ),
+        font=dict(
+        size=18),
+        legend_title=label_legend,
+        title=title_plot,
+        autosize=False,
+        width=900,
+        height=700,
+        margin=dict(
+            l=50,
+            r=50,
+            b=20,
+            t=50,
+            pad=4
+        )
+        )
+
+    # fig.show("notebook")
+
+    return fig.show("notebook")
+ 
+
 def umap_search(df, n_neighbors_list = [5, 15, 30, 50], min_dist_list = [0, 0.01, 0.05, 0.1, 0.5, 1]):
     """
     """
