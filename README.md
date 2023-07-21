@@ -4,35 +4,56 @@ The scripts and notebooks in this repository were created by @fefossa to support
 
 Inside each folder, it contains a set of Python functions related to each subproject that can be applied to different use cases.
 
-## Install
+## How to use 
 
-Clone this GitHub repository
+Before following the instructions, make sure:
+a) You have [git](https://git-scm.com/downloads) installed;
+b) You should have a repository to perform your analysis, and to be able to use scripts_notebooks_fossa as a submodule. Follow [these instructions](https://docs.github.com/en/get-started/quickstart/create-a-repo) to create your first repo.
+c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage your repositories locally. See this [video](https://www.youtube.com/watch?reload=9&v=8w79Gkm-x-c&ab_channel=C%C3%B3digoLogo) for a tutorial. 
 
-```
-git clone https://github.com/broadinstitute/scripts_notebooks_fossa.git
-```
+1. Create your [fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) of this repository scripts_notebooks_fossa:
 
-Then install using it:
+    ![Alt text](images/fork.png)
 
-```
-pip install -e .
-```
+    - Result: The fork creates a copy of a this repository that's gonna look like:
+    ```
+    https://github.com/$YOUR_USERNAME/scripts_notebooks_fossa.git
+    ```
+    - Goals: 1) Remove the connection to official repo updates to avoid unintended weld versioning reversal 2) Enable independent updates to fork code that does not impact this repository.
 
-## Use
+2. Create a submodule inside your own analysis repository
+
+    "Submodules allow you to keep a Git repository as a subdirectory of another Git repository. This lets you clone another repository into your project and keep your commits separate."
+
+    In the analysis repo you created at the beggining, do the following:
+    1. Clone the repo you created in (b):
+        ```
+        YOUR_USERNAME="INSERT-USERNAME-HERE"
+        REPO="INSERT-NAME-HERE"
+        git clone git@github.com:$YOUR_USERNAME/$REPO.git
+        ```
+
+    2. Open the Command Prompt window, ´cd´ to your repo locally, and add the submodule:
+        ```
+        cd $REPO
+        git submodule add https://github.com/$YOUR_USERNAME/scripts_notebooks_fossa.git scripts_notebooks_fossa
+        ```
+
+## Use the Python functions inside a Jupyter Notebook
 
 Inside each folder, there is an example notebook and an overall description.
 
-To use any function inside a notebook, paste the following and run the cell:
+To use any function inside a notebook, paste the following and change the path to your **main repo**:
 
 ```
-%cd G:\My Drive\GitHub\scripts_notebooks_fossa
-%pip install -e .
+import sys
+sys.path.append(r"C:\Users\REPO")
 ```
 
 To import a utilitary file from any folder, for example:
 
 ```
-from pycombat_umap import combat_util
+from scripts_notebooks_fossa.pycombat_umap import combat_util
 ```
 
 ## Details for each folder
@@ -83,3 +104,15 @@ Create a dose-response curve based on concentration and cell viability values. U
 <img src="https://github.com/broadinstitute/scripts_notebooks_fossa/assets/48028636/bfb49eee-7c3c-4f8f-8ac4-1643709adfdd" width=50% height=50%>
 
 
+# Submodules tips
+
+## To update a submodule that's inside your main repo
+
+#cd $REPO
+#git submodule update --init --recursive
+
+Follow this link https://gist.github.com/gitaarik/8735255#make-changes-inside-a-submodule
+
+## To clone an analysis repo with its submodules
+
+git clone --recurse-submodules git@github.com:$YOUR_USERNAME/$REPO.git 
