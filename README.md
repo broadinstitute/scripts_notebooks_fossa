@@ -40,6 +40,8 @@ c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage yo
         cd $REPO
         git submodule add https://github.com/$YOUR_USERNAME/scripts_notebooks_fossa.git scripts_notebooks_fossa
         ```
+    3. In your **main repository**, you'll see `scripts_notebooks_fossa` like:
+    ![Alt text](images/submodule.png)
 
 ## Use the Python functions inside a Jupyter Notebook
 
