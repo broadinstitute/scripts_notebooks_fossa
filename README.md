@@ -8,14 +8,16 @@ Inside each folder, it contains a set of Python functions related to each subpro
 
 Before following the instructions, make sure:
 a) You have [git](https://git-scm.com/downloads) installed;
+
 b) You should have a repository to perform your analysis, and to be able to use scripts_notebooks_fossa as a submodule. Follow [these instructions](https://docs.github.com/en/get-started/quickstart/create-a-repo) to create your first repo.
+
 c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage your repositories locally. See this [video](https://www.youtube.com/watch?reload=9&v=8w79Gkm-x-c&ab_channel=C%C3%B3digoLogo) for a tutorial. 
 
-1. Create your [fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) of this repository scripts_notebooks_fossa:
+1. Create your [fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) of this repository `scripts_notebooks_fossa`:
 
     ![Alt text](images/fork.png)
 
-    - Result: The fork creates a copy of a this repository that's gonna look like:
+    - Result: The fork creates a copy of a this repository into your account that looks like:
     ```
     https://github.com/$YOUR_USERNAME/scripts_notebooks_fossa.git
     ```
@@ -23,9 +25,6 @@ c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage yo
 
 2. Create a submodule inside your own analysis repository
 
-    "Submodules allow you to keep a Git repository as a subdirectory of another Git repository. This lets you clone another repository into your project and keep your commits separate."
-
-    In the analysis repo you created at the beggining, do the following:
     1. Clone the repo you created in (b):
         ```
         YOUR_USERNAME="INSERT-USERNAME-HERE"
@@ -33,7 +32,7 @@ c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage yo
         git clone git@github.com:$YOUR_USERNAME/$REPO.git
         ```
 
-    2. Open the Command Prompt window, ´cd´ to your repo locally, and add the submodule:
+    2. Open the Command Prompt window, `cd` to your repo locally, and add the submodule:
         ```
         cd $REPO
         git submodule add https://github.com/$YOUR_USERNAME/scripts_notebooks_fossa.git scripts_notebooks_fossa
@@ -50,7 +49,7 @@ import sys
 sys.path.append(r"C:\Users\REPO")
 ```
 
-To import a utilitary file from any folder, for example:
+To import a utilitary Python file from any folder, use:
 
 ```
 from scripts_notebooks_fossa.pycombat_umap import combat_util
