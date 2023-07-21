@@ -7,25 +7,28 @@ Inside each folder, it contains a set of Python functions related to each subpro
 ## How to use 
 
 Before following the instructions, make sure:
+
 a) You have [git](https://git-scm.com/downloads) installed;
 
-b) You should have a repository to perform your analysis, and to be able to use scripts_notebooks_fossa as a submodule. Follow [these instructions](https://docs.github.com/en/get-started/quickstart/create-a-repo) to create your first repo.
+b) Create a **main repository** to perform your analysis, and to be able to use `scripts_notebooks_fossa` as a submodule. Follow [these instructions](https://docs.github.com/en/get-started/quickstart/create-a-repo) to create your first repo.
 
 c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage your repositories locally. See this [video](https://www.youtube.com/watch?reload=9&v=8w79Gkm-x-c&ab_channel=C%C3%B3digoLogo) for a tutorial. 
+
+### Instructions
 
 1. Create your [fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) of this repository `scripts_notebooks_fossa`:
 
     ![Alt text](images/fork.png)
 
-    - Result: The fork creates a copy of a this repository into your account that looks like:
+    Result: The fork creates a copy of a this repository into your account that looks like:
     ```
     https://github.com/$YOUR_USERNAME/scripts_notebooks_fossa.git
     ```
-    - Goals: 1) Remove the connection to official repo updates to avoid unintended weld versioning reversal 2) Enable independent updates to fork code that does not impact this repository.
+    Goals: 1) Remove the connection to official repo updates to avoid unintended weld versioning reversal 2) Enable independent updates to fork code that does not impact this repository.
 
 2. Create a submodule inside your own analysis repository
 
-    1. Clone the repo you created in (b):
+    1. Clone the **main repo** you created in (b):
         ```
         YOUR_USERNAME="INSERT-USERNAME-HERE"
         REPO="INSERT-NAME-HERE"
