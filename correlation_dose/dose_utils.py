@@ -32,13 +32,17 @@ def logistic_curve(x, b, c, d, logec50):
     """
     return c + (d - c)/(1+10**((logec50-x)*b)) 
 
-def corr_matrix_per_plate(df_input, plates, plot_joined_replicates=False, metadata_column = 'Cells_CompoundSizeCnc', filter = False, filter_col = None, filter_list = None):
+def corr_matrix_per_plate(df_input, plates, plot_joined_replicates=False, plate_column = 'Metadata_Plate', metadata_column = 'Cells_CompoundSizeCnc', sort_by = 'Metadata_Concentration', filter = False, filter_col = None, filter_list = None):
     """
     Calculate a correlation matrix in a per-plate basis. Takes a list containing dataframes inside of it, calculates the corr matrix, and then plot each correlation matrix
     *df (dataframe) is the dataframe already normalized and feature selected
     *plates (list) is a list with the name of each plate you have in your assay/you want to calculate pearson coefficient to
     """
     cols_keep = pycytominer.cyto_utils.features.infer_cp_features(df_input, metadata=False)
+    cols_keep.append(metadata_column)
+    # df_input[sort_by] = df_input[sort_by].astype(float)
+    # df_input.sort_values(sort_by, ignore_index=True, inplace=True)
+    
     #split df by plates
     if filter:
         df = df_input[df_input[filter_col].isin(filter_list)].reset_index()
@@ -47,12 +51,13 @@ def corr_matrix_per_plate(df_input, plates, plot_joined_replicates=False, metada
 
     df_temp_list = []
     for pl in plates:
-        df_temp = df.loc[df['Metadata_Plate'] == pl]
+        df_temp = df.loc[df[plate_column] == pl]
         df_temp_list.append(df_temp)
         print('Shape of each DataFrame, split by plate', df_temp.shape)
     corr = []
     if plot_joined_replicates:
         df_temp = pd.concat(df_temp_list)
+        df_temp.sort_values(['Metadata_Compound', 'Metadata_Concentration'], ascending=[True, True], ignore_index=True, inplace=True)
         df_select_cols = df_temp[cols_keep]
         df_transposed = df_select_cols.set_index(metadata_column).T
         corr_temp = df_transposed.corr()
@@ -82,8 +87,9 @@ def plot_corr_matrix(corr, labelsize=7):
     """
     #plot corr matrix per plate
     for d in corr:
-        sorted_df = d.sort_index(ascending=True, axis = 'columns')
-        df_corr = sorted_df.sort_index(ascending=True, axis = 'index')
+        # sorted_df = d.sort_index(ascending=True, axis = 'columns')
+        # df_corr = sorted_df.sort_index(ascending=True, axis = 'index')
+        df_corr = d.copy()
         colormap = sns.color_palette("coolwarm", as_cmap=True)
         plt.figure(figsize = (35, 30))
         plt.tick_params(axis='both', which='major', labelsize=labelsize, labelbottom = False, bottom=False, top = False, labeltop=True)
@@ -141,55 +147,53 @@ def correlation_pairs(df_corr):
     
     return unstacked
 
-def create_dict(df, list_cmp, dmso = False, negcon = False, poscon = False):
+def create_dict(df, list_cmp, negcon = False, poscon = False, negcon_cmp = None, poscon_cmp = None):
     """
     Create dictionaries for AgNP 40 and AgNP 100 treated cells. 
     You can choose to get Pearson coefficient values from replicates similarities or similarity to DMSO (positive control)
     *df: contains correlated values organized in a unstacked form (output from unstack() function from pandas)
-    *dmso: set to True if you want to see similarity of treated cells to DMSO. Set to False to see similarities between replicates.
     *list_cmp is a list with the compounds names
+    *negcon: if you want the similarity between the replicates of the negcon, set to True.
+    *poscon: set to True if you want to see similarity of treated cells to your poscon. 
+            Set to False to see similarities between replicates.
+    *negcon_cmp: name of the negative control
+    *poscon_cmp: name of the positive control
     """ 
     main_dict = []
     for plate in range(len(df)):
-        dict_40 = {}
-        dict_100 = {}
+        dict_samples = {}
         for cmp in list_cmp:
             keep = []
             keep_negcon = []
             keep_poscon = []
-            if dmso:
-                for val in range(len(df[plate][cmp].loc['DMSO 0.0 10.0'])):
-                    keep.append(df[plate][cmp].loc['DMSO 0.0 10.0'][val])
+            if poscon:
+                for val in range(len(df[plate][cmp].loc[poscon_cmp])):
+                    keep.append(df[plate][cmp].loc[poscon_cmp][val])
             else:
                 for val in range(len(df[plate][cmp].loc[cmp])):
                     keep.append(df[plate][cmp].loc[cmp][val])
-                for val in range(len(df[plate]['Non-treated 0.0 0.0'].loc['Non-treated 0.0 0.0'])):
-                    keep_negcon.append(df[plate]['Non-treated 0.0 0.0'].loc['Non-treated 0.0 0.0'][val])
-                for val in range(len(df[plate]['DMSO 0.0 10.0'].loc['DMSO 0.0 10.0'])):
-                    keep_poscon.append(df[plate]['DMSO 0.0 10.0'].loc['DMSO 0.0 10.0'][val])
-            if 'AgNP 40' in cmp:
-                dict_40[cmp] = keep
+                for val in range(len(df[plate][negcon_cmp].loc[negcon_cmp])):
+                    keep_negcon.append(df[plate][negcon_cmp].loc[negcon_cmp][val])
+                for val in range(len(df[plate][poscon_cmp].loc[poscon_cmp])):
+                    keep_poscon.append(df[plate][poscon_cmp].loc[poscon_cmp][val])
+            if not cmp in negcon_cmp and not cmp in poscon_cmp:
+                dict_samples[cmp] = keep
                 if negcon:
-                    dict_40['Non-treated 0 0.0'] = keep_negcon
+                    dict_samples[negcon_cmp] = keep_negcon
                 if poscon:
                     keep_poscon_list = [pos for pos in keep_poscon if pos > 0] 
-                    dict_40['DMSO 0.0 10.0'] = keep_poscon_list
-            if 'AgNP 100' in cmp:
-                dict_100[cmp] = keep
-                if negcon:
-                    dict_100['Non-treated 0 0.0'] = keep_negcon
-                if poscon:
-                    keep_poscon_list = [pos for pos in keep_poscon if pos > 0] 
-                    dict_100['DMSO 0.0 10.0'] = keep_poscon_list
+                    dict_samples[poscon_cmp] = keep_poscon_list
 
-        main_dict.append(dict_40)
-        main_dict.append(dict_100)
+        main_dict.append(dict_samples)
 
     return main_dict
 
-def df_x_y(main_dict):
+def df_x_y(main_dict, negcon_cmp = None, poscon_cmp = None):
     """
     From the list of dictionaries, get the x, y, x_log and label and save it to a dataframe
+    *main_dict: a dictionary containing the values of similarities between the replicates
+    *negcon_cmp: the negative control name
+    *poscon_cmp: the positive control name
     """
     df_dict = []
     for dic in main_dict:
@@ -199,26 +203,29 @@ def df_x_y(main_dict):
         x_vals = []
         x_log = []
         for j in range(len(x)):
-            if 'Non' in x[j][:3]: #for non-treated cells, consider a really low concentration instead of 0.0
+            name_cnc = x[j].split(' ')
+            if negcon_cmp == x[j]: #for non-treated cells, consider a really low concentration instead of 0.0
                 num = 0.00002
-            elif 'DMS' in x[j][:3]:
+            elif poscon_cmp == x[j]:
                 num = 10.0
             else:
-                num = float(x[j][-6:])
+                num = float(name_cnc[1])
             x_vals.append(num)
-            x_log.append(np.log(num))
+            x_log.append(np.log(num))        
         #replicate the x values depending on the lenght of the y, from how many y values we have
         x_col = []
         x_log_col = []
+        labels = []
         for lst in range(len(y)):
             l = len(y[lst])
             for n in range(l):
                 x_col.append(x_vals[lst])
                 x_log_col.append(x_log[lst])
+                labels.append(x[lst])
         #create y column
         y_col = [item for sublist in y for item in sublist]
         #create dataframe
-        df = pd.DataFrame({'x':x_col, 'x_log': x_log_col, 'y':y_col, 'label': x[0][:8]})
+        df = pd.DataFrame({'x':x_col, 'x_log': x_log_col, 'y':y_col, 'label': labels})
         df_dict.append(df)
     
     return df_dict
@@ -259,19 +266,19 @@ def plot_linear_regression(df_list):
         else:
             p = sns.jointplot(x="x", y="y", data=dic,
                     kind="reg", truncate=False,
-                    xlim=(-0.2, 1.2), ylim=(-1, 1),
+                    # xlim=(-0.2, 1.2), ylim=(-1, 1),
                     color="m", height=7)
             p.fig.suptitle(dic.label[0], horizontalalignment='left')
     return 
 
-def dose_response_generator(df_list, define_bottom = False, bottom = None):
+def dose_response_generator(df_list, define_bottom = False, bottom = None, ecf = 0.1, hill = 1):
     """
     Generate the dose response curves based on a given list of dataframes
     *df_list is a list of dataframes
     """
     for df in df_list:
         #self-starter parameters
-        logec50 = log_ec50(0.1, 1, 50) #calculate an estimative value for logec50
+        logec50 = log_ec50(ecf, hill, 50) #calculate an estimative value for logec50
         p0 = [1, min(df.y), max(df.y), logec50] #initial guess for b slope, bottom c, top d and logec50 initial guess
         res, pcov = curve_fit(
             f=logistic_curve,
@@ -326,3 +333,42 @@ def prepare_plot_sm(df):
     plot_corr_matrix(df_corr, labelsize=7.5)
 
     return
+
+def col_generator(df, cols_to_join = ['Metadata_Compound', 'Metadata_Concentration']):
+    """
+    Create a new column containing information from compound + concentration of compounds
+    *cols_to_join: provide columns names to join on, order will be determined by order in this list
+    """
+    col_copy = cols_to_join.copy()
+    init = cols_to_join.pop(0) #pop the first element of the list
+    new_col_temp = [init] #keep the first element in the list
+    for cols in cols_to_join:
+        temp = cols.split("_", 1) #only split metadata out
+        print(temp[1])
+        new_col_temp.append(temp[1])
+    new_col = ('_'.join(new_col_temp))  #generate the new column name from the list
+    df[new_col] = df[col_copy].astype(str).agg(' '.join, axis=1) #transform the column to str and create new metadata
+    print("Names of the compounds + concentration: ",  df[new_col].unique())
+
+    return df, new_col
+
+def dose_curve_individual_feature(df, list_cmp, feature = None, label_col = None, negcon_cmp = None, poscon_cmp = None):
+    """
+    """
+    df_feat = pd.DataFrame({'feature':df[feature], 'label':df[label_col]})
+    key = df_feat['label'].to_list()
+    values = df_feat['feature'].to_list()  
+    main_dict = []
+    dict_samples = {}
+    for cmp in list_cmp:
+        keep = []
+        keep_negcon = []
+        keep_poscon = []
+        for i in range(len(key)):
+            if key[i] == cmp:
+                keep.append(values[i])
+        if not cmp in negcon_cmp and not cmp in poscon_cmp:
+            dict_samples[cmp] = keep
+    main_dict.append(dict_samples)
+
+    return main_dict 
