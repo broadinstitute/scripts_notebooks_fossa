@@ -1,10 +1,8 @@
-# Bio-image and data analysis scripts
+# Bioimage and data analysis scripts
 
 The scripts and notebooks in this repository were created by @fefossa to support the projects developed during her Ph.D. It was developed during an internship at Cimini Lab and Carpenter-Singh Lab. 
 
 Inside each folder, it contains a set of Python functions related to each subproject that can be applied to different use cases.
-
-## How to use 
 
 Before following the instructions, make sure:
 
@@ -14,9 +12,9 @@ b) Create a **main repository** to perform your analysis, and to be able to use 
 
 c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage your repositories locally. See this [video](https://www.youtube.com/watch?reload=9&v=8w79Gkm-x-c&ab_channel=C%C3%B3digoLogo) for a tutorial. 
 
-### Instructions
+## 1. Instructions
 
-1. Create your [fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) of this repository `scripts_notebooks_fossa`:
+1. Create your [fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) of the repository `scripts_notebooks_fossa`:
 
     ![Alt text](images/fork.png)
 
@@ -24,7 +22,6 @@ c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage yo
     ```
     https://github.com/$YOUR_USERNAME/scripts_notebooks_fossa.git
     ```
-    Goals: 1) Remove the connection to official repo updates to avoid unintended weld versioning reversal 2) Enable independent updates to fork code that does not impact this repository.
 
 2. Create a submodule inside your own analysis repository
 
@@ -43,7 +40,26 @@ c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage yo
     3. In your **main repository**, you'll see `scripts_notebooks_fossa` like:
     ![Alt text](images/submodule.png)
 
-## Use the Python functions inside a Jupyter Notebook
+3. Create a new environment called `bioimage_scripts` using conda
+
+    1. Download [miniconda](https://docs.conda.io/en/latest/miniconda.html);
+
+    2. Open the Anaconda prompt and `cd` to the repo;
+        ```
+        cd $REPO
+        ```
+
+    3. Paste the following into the command prompt:
+        ```
+        conda env create --file environment.yml 
+        ```
+
+    4. Run the notebooks available here inside this environment:
+        ```
+        conda activate bioimage_scripts
+        ```
+
+## 2. Use the Python functions inside a Jupyter Notebook
 
 Inside each folder, there is an example notebook and an overall description.
 
@@ -60,7 +76,7 @@ To import a utilitary Python file from any folder, use:
 from scripts_notebooks_fossa.pycombat_umap import combat_util
 ```
 
-## Details for each folder
+## 3. Details for each folder
 
 ### 1. Profile generator for CellProfiler and DeepProfiler outputs
 **profiles folder:**
@@ -108,7 +124,7 @@ Create a dose-response curve based on concentration and cell viability values. U
 <img src="https://github.com/broadinstitute/scripts_notebooks_fossa/assets/48028636/bfb49eee-7c3c-4f8f-8ac4-1643709adfdd" width=50% height=50%>
 
 
-# Submodules tips
+# APPENDIX: Submodules tips
 
 ## To update a submodule that's inside your main repo
 
