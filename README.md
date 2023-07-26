@@ -26,6 +26,7 @@ c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage yo
 <details>
 <summary>macOS/linux</summary>
 <br>
+
 2. Create a submodule inside your own analysis repository
 
     1. Clone the **main repo** you created in (b):
@@ -68,6 +69,7 @@ c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage yo
 <details>
 <summary>Windows</summary>
 <br>
+
 2. Create a submodule inside your own analysis repository
 
     1. Clone the **main repo** you created in (b):
