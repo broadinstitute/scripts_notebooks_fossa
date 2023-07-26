@@ -23,20 +23,25 @@ c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage yo
     https://github.com/$YOUR_USERNAME/scripts_notebooks_fossa.git
     ```
 
+<details>
+<summary>macOS/linux</summary>
+<br>
 2. Create a submodule inside your own analysis repository
 
     1. Clone the **main repo** you created in (b):
+
         ```
         YOUR_USERNAME="INSERT-USERNAME-HERE"
         REPO="INSERT-NAME-HERE"
         git clone git@github.com:$YOUR_USERNAME/$REPO.git
         ```
-
     2. Open the Command Prompt window, `cd` to your repo locally, and add the submodule:
+        
         ```
         cd $REPO
         git submodule add https://github.com/$YOUR_USERNAME/scripts_notebooks_fossa.git scripts_notebooks_fossa
         ```
+    
     3. In your **main repository**, you'll see `scripts_notebooks_fossa` like:
     ![Alt text](images/submodule.png)
 
@@ -45,8 +50,51 @@ c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage yo
     1. Download [miniconda](https://docs.conda.io/en/latest/miniconda.html);
 
     2. Open the Anaconda prompt and `cd` to the repo;
+        
         ```
-        cd $REPO
+        cd $REPO/scripts_notebooks_fossa
+        ```
+    3. Paste the following into the command prompt:
+        ```
+        conda env create --file environment.yml 
+        ```
+
+    4. Run the notebooks available here inside this environment:
+        ```
+        conda activate bioimage_scripts
+        ```
+</details>
+
+<details>
+<summary>Windows</summary>
+<br>
+2. Create a submodule inside your own analysis repository
+
+    1. Clone the **main repo** you created in (b):
+    
+        ```
+        set YOUR_USERNAME="INSERT-USERNAME-HERE"
+        set REPO="INSERT-NAME-HERE"
+        git clone git@github.com:%YOUR_USERNAME%/%REPO%.git
+        ```
+     2. Open the Command Prompt window, `cd` to your repo locally, and add the submodule:
+
+        ```
+        cd %REPO%
+        git submodule add https://github.com/%YOUR_USERNAME%/scripts_notebooks_fossa.git scripts_notebooks_fossa
+        ```
+    
+    3. In your **main repository**, you'll see `scripts_notebooks_fossa` like:
+    ![Alt text](images/submodule.png)
+
+3. Create a new environment called `bioimage_scripts` using conda
+
+    1. Download [miniconda](https://docs.conda.io/en/latest/miniconda.html);
+
+    2. Open the Anaconda prompt and `cd` to the repo;
+
+        ```
+        cd %REPO%/scripts_notebooks_fossa
         ```
 
     3. Paste the following into the command prompt:
@@ -58,6 +106,7 @@ c) I recommend to use [GitHub Desktop](https://desktop.github.com/) to manage yo
         ```
         conda activate bioimage_scripts
         ```
+</details>
 
 ## 2. Use the Python functions inside a Jupyter Notebook
 
