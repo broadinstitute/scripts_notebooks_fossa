@@ -133,3 +133,88 @@ def loop_random_forest_model_eval(df_, target = "", column_to_loop = "", list_to
                                 row_index=row_index, 
                                 feature_names=X_train.columns.to_list(), 
                                 )
+        
+############################ TO FIX LATER
+
+def pruning():
+    """
+    comes from https://scikit-learn.org/stable/auto_examples/tree/plot_cost_complexity_pruning.html
+    """
+    from sklearn.tree import DecisionTreeClassifier
+    clf = DecisionTreeClassifier(random_state=0)
+    path = clf.cost_complexity_pruning_path(X_train, y_train)
+    ccp_alphas, impurities = path.ccp_alphas, path.impurities
+
+    fig, ax = plt.subplots()
+    ax.plot(ccp_alphas[:-1], impurities[:-1], marker="o", drawstyle="steps-post")
+    ax.set_xlabel("effective alpha")
+    ax.set_ylabel("total impurity of leaves")
+    ax.set_title("Total Impurity vs effective alpha for training set")
+
+    clfs = []
+    for ccp_alpha in ccp_alphas:
+        clf = DecisionTreeClassifier(random_state=0, ccp_alpha=ccp_alpha)
+        clf.fit(X_train, y_train)
+        clfs.append(clf)
+    print(
+        "Number of nodes in the last tree is: {} with ccp_alpha: {}".format(
+            clfs[-1].tree_.node_count, ccp_alphas[-1]
+        )
+    )
+    clfs = clfs[:-1]
+    ccp_alphas = ccp_alphas[:-1]
+
+    node_counts = [clf.tree_.node_count for clf in clfs]
+    depth = [clf.tree_.max_depth for clf in clfs]
+    fig, ax = plt.subplots(2, 1)
+    ax[0].plot(ccp_alphas, node_counts, marker="o", drawstyle="steps-post")
+    ax[0].set_xlabel("alpha")
+    ax[0].set_ylabel("number of nodes")
+    ax[0].set_title("Number of nodes vs alpha")
+    ax[1].plot(ccp_alphas, depth, marker="o", drawstyle="steps-post")
+    ax[1].set_xlabel("alpha")
+    ax[1].set_ylabel("depth of tree")
+    ax[1].set_title("Depth vs alpha")
+    fig.tight_layout()
+    
+    train_scores = [clf.score(X_train, y_train) for clf in clfs]
+    test_scores = [clf.score(X_test, y_test) for clf in clfs]
+
+    fig, ax = plt.subplots()
+    ax.set_xlabel("alpha")
+    ax.set_ylabel("accuracy")
+    ax.set_title("Accuracy vs alpha for training and testing sets")
+    ax.plot(ccp_alphas, train_scores, marker="o", label="train", drawstyle="steps-post")
+    ax.plot(ccp_alphas, test_scores, marker="o", label="test", drawstyle="steps-post")
+    ax.legend()
+    plt.show()
+
+def eval_classic():
+    """
+    #good explanation at https://stackoverflow.com/questions/52269187/facing-valueerror-target-is-multiclass-but-average-binary
+    """
+    
+
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, average='macro')
+    recall = recall_score(y_test, y_pred, average='macro')
+
+    print("Accuracy:", accuracy)
+    print("Precision:", precision)
+    print("Recall:", recall)
+
+def plot_one_tree():
+    """
+    1. Feature name + split value. Split value — split value is decided after selecting a threshold value which gives highest information gain for that split.
+
+    2. Gini impurity: 1 - (probability of Yes)^2 - (probability of No)^2.
+        - Gini — It is basically deciding factor i.e. to select feature at next node , to pick best split value etc.
+
+    3. Samples — No of samples remaining at that particular node.
+
+    4. Values — No of samples of each class remaining at that particular node.
+    """
+
+    from sklearn import tree
+    plt.figure(figsize=(12,12))
+    tree.plot_tree(forest.estimators_[0], feature_names=X.columns, filled=True, class_names=forest.classes_.astype('str').tolist(),rounded=True, fontsize=10)
