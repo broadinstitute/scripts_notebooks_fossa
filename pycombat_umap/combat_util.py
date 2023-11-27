@@ -198,7 +198,7 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
         color_discrete_sequence=color_sequence,
         error_x=error_x, error_y=error_y
         )
-        fig.update_traces(marker={'size': 12})
+        fig.update_traces(marker={'size': 5})
 
     fig.update_layout(
         dict(updatemenus=[
@@ -241,7 +241,7 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
             pad=4
         )
         )
-
+    fig.update_traces(error_x=dict(thickness=3), error_y=dict(thickness=3))
     # fig.show("notebook")
 
     return fig.show("notebook")
@@ -385,7 +385,6 @@ def plot_umap_3d(df_plot, color_col, hover_cols, split_df = False, split_column 
 
     return fig.show("notebook")
  
-
 def umap_search(df, n_neighbors_list = [5, 15, 30, 50], min_dist_list = [0, 0.01, 0.05, 0.1, 0.5, 1]):
     """
     """
@@ -526,16 +525,16 @@ def tsne_generator(df, perplexity=40, n_components = 2, metric='cosine', noncano
 
     return X, tsne_df
 
-def tsne_divergence(X_train):
+def tsne_divergence(X_train, range=80):
 
     import numpy as np
     from sklearn.manifold import TSNE
 
-    perplexity = np.arange(5, 80, 5)
+    perplexity = np.arange(5, range, 5)
     divergence = []
 
     for i in perplexity:
-        model = TSNE(n_components=2, init="pca", perplexity=i)
+        model = TSNE(n_components=2, init="pca", perplexity=i, random_state=42)
         reduced = model.fit_transform(X_train)
         divergence.append(model.kl_divergence_)
     fig = px.line(x=perplexity, y=divergence, markers=True)
@@ -604,6 +603,11 @@ def plot_tsne(df_plot, color_col, hover_cols, split_df = False, split_column = N
             color_discrete_map=color_discrete,
             error_x=error_x, error_y=error_y
             )
+            fig.update_traces(marker=dict(
+                              line=dict(width=1,
+                                        color='White')),
+                  selector=dict(mode='markers'))
+
         else:
             fig = px.scatter(
             df, x=x, y=y,
@@ -623,9 +627,13 @@ def plot_tsne(df_plot, color_col, hover_cols, split_df = False, split_column = N
         color_discrete_sequence=color_sequence,
         error_x=error_x, error_y=error_y
         )
-        # fig.update_traces(marker={'size': 12})
+        fig.update_traces(marker=dict(
+                                      size=7,
+                              line=dict(width=1,
+                                        color='White')),
+                  selector=dict(mode='markers'))
 
-    fig.update_layout(
+    fig.update_layout(plot_bgcolor='white',
         font=dict(
         size=18),
         legend_title=label_legend,
@@ -643,6 +651,23 @@ def plot_tsne(df_plot, color_col, hover_cols, split_df = False, split_column = N
         xaxis_title="TSNE X",
         yaxis_title="TSNE Y"
         )
+    
+    fig.update_traces(error_x=dict(thickness=2, color='black'), error_y=dict(
+        color='black',
+        thickness=2,
+    ),)
+    fig.update_xaxes(
+    mirror=True,
+    ticks='outside',
+    showline=True,
+    linecolor='black',
+    )
+    fig.update_yaxes(
+        mirror=True,
+        ticks='outside',
+        showline=True,
+        linecolor='black',
+    )
 
     # fig.show("notebook")
     config = {
@@ -689,7 +714,6 @@ def generate_pca(df, n_components = 2, noncanonical_features=False):
 
     # Print the results
     print(f"Explained Variance Ratio: {explained_variance_ratio}")
-
 
     columns = [str(x) for x in range(0, n_components)]
 
