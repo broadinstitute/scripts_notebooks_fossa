@@ -1,3 +1,7 @@
+import easygui as eg
+import os
+import csv
+
 def plate_wells(plate_type=96):
     """ 
     Provide a plate type and return the well's names
@@ -67,3 +71,35 @@ def generate_rows_lists(samples, wells):
         else:
             sublist.append([])
     return sublist
+
+def get_example_to_name_metadata_cols(samples):
+    example = []
+    for s in samples:
+        if s != 'None':
+            example.append(s)
+            break
+    x = [n.split(" ") for n in example]
+    metadata_cols = eg.multenterbox("Write the name of the column for each example", "Columns", x[0])
+    metadata_cols.insert(0, "well_position")
+    print(f"Column's names: {metadata_cols}")
+
+    return metadata_cols
+
+def generate_csv(file_name, metadata_cols, sublist_add_platemap):
+
+    os.makedirs("platemap", exist_ok=True)
+
+    with open(rf"platemap\{file_name}.csv",'w',newline = '') as csvfile: #create a metadata.csv file 
+        writer = csv.writer(csvfile, delimiter=',') #comma delimited
+    #gives the header name row into csv
+        writer.writerow([g for g in metadata_cols])
+        for sub in sublist_add_platemap:
+            if len(sub) == len(metadata_cols):
+                writer.writerow(sub)
+
+    #also generate a txt file
+    with open(rf"platemap\{file_name}.csv", 'r') as f_in, open(f"platemap\{file_name}.txt", 'w') as f_out:
+        # 2. Read the CSV file and store in variable
+        content = f_in.read()
+        # 3. Write the content into the TXT file
+        f_out.write(content)
