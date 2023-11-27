@@ -137,12 +137,12 @@ def count_list_of_sublists(complex_list, feat_number):
 
     return number_feat_lst, percent_lst
 
-def plot_stacked_bar(df, x='Metadata_Time', ylabel="Percentage (%)", title="", colormap=None, rotation=45):
+def plot_stacked_bar(df, x='Metadata_Time', ylabel="Percentage (%)", title="", colormap=None, rotation=45, percentage_fontsize=18):
         ax = df.plot(x=x, 
                      kind='bar', 
                      stacked=True,
                      color=colormap)
-        plt.rcParams.update({'font.size': 18})
+        plt.rcParams.update({'font.size': percentage_fontsize})
         plt.legend(
             loc='center left',
             bbox_to_anchor=(1.0, 0.5), 
@@ -158,7 +158,33 @@ def plot_stacked_bar(df, x='Metadata_Time', ylabel="Percentage (%)", title="", c
                 if not height == 0.0:
                         ax.text(x+width/2, 
                                 y+height/2, 
-                                '{:.0f} %'.format(height), 
+                                '{:.0f}%'.format(height), 
+                                horizontalalignment='center', 
+                                verticalalignment='center')
+        plt.show()
+
+def plot_stacked_bar_horizontal(df, x='Metadata_Time', ylabel="Percentage (%)", title="", colormap=None, rotation=45, percentage_fontsize=18):
+        ax = df.plot(x=x, 
+                     kind='barh', 
+                     stacked=True,
+                     color=colormap)
+        plt.rcParams.update({'font.size': percentage_fontsize})
+        plt.legend(
+            loc='center left',
+            bbox_to_anchor=(1.0, 0.5), 
+            # reverse=True
+            )
+        plt.ylabel("")
+        plt.xlabel(ylabel, fontsize=15)
+        plt.xticks(rotation=rotation,fontsize=12)
+        plt.title(title,fontsize=15)
+        for p in ax.patches:
+                width, height = p.get_width(), p.get_height()
+                x, y = p.get_xy() 
+                if not width == 0.0:
+                        ax.text(x+width/2, 
+                                y+height/2, 
+                                '{:.0f}%'.format(width), 
                                 horizontalalignment='center', 
                                 verticalalignment='center')
         plt.show()

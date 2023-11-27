@@ -2,12 +2,82 @@ import pycytominer
 import shap
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import accuracy_score
 
-def random_forest_model_eval(df_, target = "", ccp = 0.08, n_estimators=10, max_depth=5, slice = False, column_slice = None, slice_to_value = None):
+
+def random_forest_iterations(df_, target = "", ccp = 0.08, n_estimators=10, max_depth=5, 
+                             slice = False, column_slice = None, slice_to_value = None, number_iterations=None):
+    """
+    This function takes a df (which you can slice based on a column and a value), creates a train/test, and train a Random Forest Classifier model.
+    We evaluate the model using confusion matrix, cross validation, and shap.
+    *df_ (DataFrame): dataframe that contains X and y
+    *target (str): column name that will be the target (what are the classes?)
+    *slice (bool): True if wants to slice the df based on a column_slice (str) and a variable that is in that column (slice_to_value) 
+
+    return:
+    shap_values_t: a list with the shap_values for all the features in the df for each class and sample;
+    X_train: the portion of the dataframe that model was trained on.
+    """
+    if slice:
+        df = df_[df_[column_slice] == slice_to_value]
+        print(f"Looping through {column_slice} = {slice_to_value}.")
+    else:
+        df = df_.copy()
+    
+    #features and metadata lists of cols
+    feat = pycytominer.cyto_utils.features.infer_cp_features(df, metadata=False)
+    meta = pycytominer.cyto_utils.features.infer_cp_features(df, metadata=True)
+    #X, y and y target    
+    X = pd.DataFrame(df, columns=feat)
+    y = pd.DataFrame(df, columns=meta)
+    y_target = y[target]
+
+    all_feature_importances=[]
+    all_train_accuracies = []
+    all_test_accuracies = []        
+    for _ in range(number_iterations):
+        X_train, X_test, y_train, y_test = train_test_split(X, y_target, random_state=42)
+        #train
+        forest = RandomForestClassifier(random_state=0, ccp_alpha=ccp, n_estimators=n_estimators, max_depth=max_depth)
+        forest.fit(X_train, y_train)
+        # Get feature importances for this iteration
+        iteration_feature_importances = forest.feature_importances_
+
+        # Store the feature importances
+        all_feature_importances.append(iteration_feature_importances)
+
+        # Predictions on training set
+        y_train_pred = forest.predict(X_train)
+        train_accuracy = accuracy_score(y_train, y_train_pred)
+        all_train_accuracies.append(train_accuracy)
+
+        # Predictions on test set
+        y_test_pred = forest.predict(X_test)
+        test_accuracy = accuracy_score(y_test, y_test_pred)
+        all_test_accuracies.append(test_accuracy)
+    # Aggregate feature importances across iterations
+    aggregate_feature_importances = np.mean(all_feature_importances, axis=0)
+
+    # Rank features based on aggregated importances
+    feature_ranking = np.argsort(aggregate_feature_importances)[::-1]
+    
+    # Calculate mean accuracy for training and testing sets
+    mean_train_accuracy = np.mean(all_train_accuracies)
+    mean_test_accuracy = np.mean(all_test_accuracies)
+
+    print(f"\nMean Training Accuracy: {mean_train_accuracy}")
+    print(f"Mean Testing Accuracy: {mean_test_accuracy}")  
+
+    return X, all_feature_importances, aggregate_feature_importances, forest
+
+def random_forest_model_eval(df_, target = "", ccp = 0.08, n_estimators=10, max_depth=5, 
+                             slice = False, column_slice = None, slice_to_value = None,
+                            ):
     """
     This function takes a df (which you can slice based on a column and a value), creates a train/test, and train a Random Forest Classifier model.
     We evaluate the model using confusion matrix, cross validation, and shap.
@@ -67,9 +137,9 @@ def random_forest_model_eval(df_, target = "", ccp = 0.08, n_estimators=10, max_
     row_index=2
     base = explainer.expected_value
     shap.multioutput_decision_plot(list(base), shap_values_t,
-                               row_index=row_index, 
-                               feature_names=X_train.columns.to_list(), 
-                               )
+                            row_index=row_index, 
+                            feature_names=X_train.columns.to_list(), 
+                            )
     
     return shap_values_t, X_train, forest
                 
@@ -134,6 +204,49 @@ def loop_random_forest_model_eval(df_, target = "", column_to_loop = "", list_to
                                 feature_names=X_train.columns.to_list(), 
                                 )
         
+def col_generator(df, cols_to_join = ['Metadata_Compound', 'Metadata_Concentration']):
+    """
+    Create a new column containing information from compound + concentration of compounds
+    *cols_to_join: provide columns names to join on, order will be determined by order in this list
+    """
+    col_copy = cols_to_join.copy()
+    init = cols_to_join.pop(0) #pop the first element of the list
+    new_col_temp = [init] #keep the first element in the list
+    for cols in cols_to_join:
+        temp = cols.split("_", 1) #only split metadata out
+        print(temp[1])
+        new_col_temp.append(temp[1])
+    new_col = ('_'.join(new_col_temp))  #generate the new column name from the list
+    df[new_col] = df[col_copy].astype(str).agg(' '.join, axis=1) #transform the column to str and create new metadata
+    print("Names of the compounds + concentration: ",  df[new_col].unique())
+
+    return df, new_col
+
+def most_important_with_sd(X, all_feature_importances, aggregate_feature_importances, number_of_features_select=30, compound=None):
+    """
+    """
+    feat_importance_sd = np.std(all_feature_importances, axis=0)
+    feature_ranking = np.argsort(aggregate_feature_importances)[::-1]
+    features=[]
+    importance=[]
+    importance_sd=[]
+    for i, feature_index in enumerate(feature_ranking):
+            if i < number_of_features_select:
+                    features.append(X.columns[feature_index])
+                    importance.append(aggregate_feature_importances[feature_index])
+                    importance_sd.append(feat_importance_sd[feature_index])
+    
+    df_results = pd.DataFrame(list(zip(features, importance, importance_sd)), columns=[f'{compound}_features', f'{compound}_importance', f'{compound}_importance_sd'])
+
+    fig, ax = plt.subplots()
+    df_results.sort_values(by=[f'{compound}_importance'],ascending=True).plot.barh(x=f'{compound}_features', y=f'{compound}_importance', yerr=f'{compound}_importance_sd', ax=ax,align="center")
+    ax.set_title(f"{compound} feature importances (100 iterations)")
+    ax.set_xlabel("Feature importance")
+    fig.set_size_inches(18.5, 10.5)
+    plt.show()
+
+    return df_results
+
 ############################ TO FIX LATER
 
 def pruning():
