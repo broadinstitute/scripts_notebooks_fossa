@@ -27,7 +27,8 @@ def plot_and_stat(df, feature, x, palette, order_to_plot = [], hue_order_boxplot
                   pairs_stat = [], show_hist=False, rotation=75, 
                   new_labels=[], ylabel="", hue_col="Metadata_Time",
                   title_legend='Time (days)',
-                  set_lim=False, xlim=None, ylim=None):
+                  set_lim=False, xlim=None, ylim=None,
+                  perform_stat_test=True, add_legend=True, fontsize_xticks=10):
     """
     
     """
@@ -53,6 +54,7 @@ def plot_and_stat(df, feature, x, palette, order_to_plot = [], hue_order_boxplot
                     aspect=3,
                     palette=palette,
                     # boxprops={'alpha': 0.4},
+                    medianprops=dict(color="white", alpha=1),
                     data=df,
                     order=order_to_plot,
                     hue_order=hue_order_boxplot,
@@ -72,20 +74,24 @@ def plot_and_stat(df, feature, x, palette, order_to_plot = [], hue_order_boxplot
                     )
     plt.xticks(rotation=rotation)
     plt.legend([],[], frameon=False)
-    g.add_legend(title=title_legend)
+    if add_legend:
+        g.add_legend(title=title_legend)
     g.set(xlabel=None, title=feature, ylabel=ylabel)
     if set_lim:
         g.ax.set_ylim(xlim,ylim)
 
-    annot = Annotator(g.ax, pairs_stat, 
-                    data=df, x=x, y=feature, order=order_to_plot)
-    annot.reset_configuration()
-    annot.new_plot(g.ax, pairs_stat, data=df, x=x, y=feature, order=order_to_plot)
-    annot.configure(test=stat_test, text_format='star', loc='inside', verbose=2).apply_test().annotate()
+    if perform_stat_test:
+        annot = Annotator(g.ax, pairs_stat, 
+                        data=df, x=x, y=feature, order=order_to_plot)
+        annot.reset_configuration()
+        annot.new_plot(g.ax, pairs_stat, data=df, x=x, y=feature, order=order_to_plot)
+        annot.configure(test=stat_test, text_format='star', loc='inside', verbose=2).apply_test().annotate()
 
-    g.set_xticklabels(new_labels, fontsize=10)
-
+    g.set_xticklabels(new_labels, fontsize=fontsize_xticks)
+    fig = g.ax.get_figure()
+    fig.savefig(f"{feature}.svg")
     plt.show()
+    return
 
 def plot_with_markers(df, feature, x, palette_boxplot=None, order_to_plot = [], hue_order_boxplot = [], 
                   pairs_stat = [], show_hist=False, rotation=75, 
