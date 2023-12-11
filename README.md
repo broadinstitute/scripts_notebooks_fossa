@@ -129,6 +129,15 @@ from scripts_notebooks_fossa.pycombat_umap import combat_util
 
 ## 3. Details for each folder
 
+### 0. Metadata
+**metadata folder:**
+Notebooks and executable programs to:
+    
+    1. Generate a metadata file from layout of a plate containing all the info about the assay (**metadata_from_layout_program**);
+
+    2. Generate a load csv file with the location of the images split by channel, and metadata info from Plate, Well, and Site.
+
+
 ### 1. Profile generator for CellProfiler and DeepProfiler outputs
 **profiles folder:**
 It has one folder for each software output, but the idea is the same for both. There are two notebooks:
@@ -145,8 +154,10 @@ It will process well-aggregated profiles and apply batch correction using PyComb
 
 - For more details on environment settings, see the readme inside the folder.
 
+- Run TSNE and UMAP for the number of iterations determined and plot the mean embedding and standard deviation.
+
 - Example of a plot:
-<img src="https://github.com/broadinstitute/scripts_notebooks_fossa/assets/48028636/9b733dec-2939-4e2c-914d-0e8e8bd06021" width=50% height=50%>
+![Alt text](images/TSNE.png)
 
 
 
@@ -174,6 +185,20 @@ Create a dose-response curve based on concentration and cell viability values. U
 
 <img src="https://github.com/broadinstitute/scripts_notebooks_fossa/assets/48028636/bfb49eee-7c3c-4f8f-8ac4-1643709adfdd" width=50% height=50%>
 
+
+### 6. Plot single features
+**individual_feature_and_statistics folder:**
+Plot boxplots with each sample colored by the batch with the option to annotate with statannotations.
+
+![Alt text](images/single_feat.png)
+
+### 7. Machine learning
+**machine_learning folder:**
+Example of running a Random Forest model to find the feature importance between groups and the shap value.
+
+
+![Alt text](images/shap.png)
+![Alt text](images/shap2.png)
 
 # APPENDIX: Submodules tips
 
