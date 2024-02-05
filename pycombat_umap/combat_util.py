@@ -95,8 +95,12 @@ def generate_x_y_umap(df, n_neighbors = 5, min_dist = 0.1, n_components = 2, met
         mean_embedding = np.mean(umap_results_array, axis=0)
         std_embedding = np.std(umap_results_array, axis=0)
         
+        if n_components == 2:
+            error_cols = ['x_err', 'y_err']
+        else:
+            error_cols = [f"{str(x)}_err" for x in range(0, n_components)]
         # Dataframes
-        error_df = pd.DataFrame(data=std_embedding, columns=['x_err', 'y_err'])
+        error_df = pd.DataFrame(data=std_embedding, columns=error_cols)
         proj_df = pd.DataFrame(data=mean_embedding, columns=columns)
         umap_df = pd.concat([proj_df, error_df, y], axis='columns')
     else:
@@ -157,8 +161,8 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
             label_legend = 'Time of cell recovery<br>after AgNP treatment<br>(in days)'
     elif dili_color:
         df['colors_plot_col'] = df[color_col]
-        color_discrete = {"Aspirin": 'rgb(229, 134, 6)', 'Amiodarone': 'rgb(93, 105, 177)', "Cyclophosphamide": 'rgb(82, 188, 163)', "Etoposide": 'rgb(153, 201, 69)',
-                  "Vehicle-ETP":'rgb(204, 97, 176)', "Non-treated":'rgb(36, 121, 108)', "Lovastatin":'rgb(218, 165, 27)', "Orphenadrine":'rgb(47, 138, 196)',
+        color_discrete = {"Aspirin": "#1f78b4", 'Amiodarone': "#33a02c", "Cyclophosphamide": "#e31a1c", "Etoposide": "#ff7f00",
+                  "Vehicle-ETP":'rgb(204, 97, 176)', "Non-treated":'rgb(36, 121, 108)', "Lovastatin":"#6a3d9a", "Orphenadrine":"#a6cee3",
                   "Tetracycline":'rgb(118, 78, 159)', "DMSO":'rgb(237, 100, 90)', "Lactose":'rgb(165, 170, 153)'}
         color_sequence = px.colors.qualitative.Vivid
     else:
@@ -190,15 +194,26 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
             color_discrete_sequence=color_sequence
             )
     else:
-        fig = px.scatter(
-        df, x=x, y=y,
-        color='colors_plot_col',
-        hover_data=hover_cols,
-        color_continuous_scale=px.colors.sequential.Bluered,
-        color_discrete_sequence=color_sequence,
-        error_x=error_x, error_y=error_y
-        )
-        fig.update_traces(marker={'size': 5})
+        if dili_color:
+            fig = px.scatter(
+            df, x=x, y=y,
+            color='colors_plot_col',
+            hover_data=hover_cols,
+            color_continuous_scale=px.colors.sequential.Bluered,
+            color_discrete_map=color_discrete,
+            error_x=error_x, error_y=error_y
+            )
+        else:
+            fig = px.scatter(
+            df, x=x, y=y,
+            color='colors_plot_col',
+            hover_data=hover_cols,
+            color_continuous_scale=px.colors.sequential.Bluered,
+            color_discrete_sequence=color_sequence,
+            error_x=error_x, error_y=error_y
+            )
+        fig.update_traces(marker={'size': 10})
+        
 
     fig.update_layout(
         dict(updatemenus=[
@@ -242,9 +257,17 @@ def plot_umap(df_plot, color_col, hover_cols, split_df = False, split_column = N
         )
         )
     fig.update_traces(error_x=dict(thickness=3), error_y=dict(thickness=3))
-    # fig.show("notebook")
+    config = {
+    'toImageButtonOptions': {
+        'format': 'svg', # one of png, svg, jpeg, webp
+        'filename': 'custom_image',
+        'height': 500,
+        'width': 700,
+        'scale':6 # Multiply title/legend/axis/canvas sizes by this factor
+    }
+    }
 
-    return fig.show("notebook")
+    return fig.show(config=config)
 
 def plot_umap_3d(df_plot, color_col, hover_cols, split_df = False, split_column = None, np = None, discrete = False, size=False, size_col = None, umap_param=False, neighbor=None, mindist=None, compound_color=False, time_color=False, dili_color=False,
               x="0", y="1", z="2"):
@@ -290,7 +313,9 @@ def plot_umap_3d(df_plot, color_col, hover_cols, split_df = False, split_column 
 
     if discrete:
         df['colors_plot_col'] = df[color_col].astype(str)
-        color_sequence = px.colors.sequential.Plasma
+        # color_sequence = px.colors.sequential.Plasma
+        color_sequence = px.colors.diverging.Portland
+        # color_sequence = px.colors.qualitative.Dark2
         if compound_color:
             color_sequence = px.colors.sequential.Hot
         if time_color:
@@ -298,8 +323,8 @@ def plot_umap_3d(df_plot, color_col, hover_cols, split_df = False, split_column 
             label_legend = 'Time of cell recovery<br>after AgNP treatment<br>(in days)'
     elif dili_color:
         df['colors_plot_col'] = df[color_col]
-        color_discrete = {"Aspirin": 'rgb(229, 134, 6)', 'Amiodarone': 'rgb(93, 105, 177)', "Cyclophosphamide": 'rgb(82, 188, 163)', "Etoposide": 'rgb(153, 201, 69)',
-                  "Vehicle-ETP":'rgb(204, 97, 176)', "Non-treated":'rgb(36, 121, 108)', "Lovastatin":'rgb(218, 165, 27)', "Orphenadrine":'rgb(47, 138, 196)',
+        color_discrete = {"Aspirin": "#1f78b4", 'Amiodarone': "#33a02c", "Cyclophosphamide": "#e31a1c", "Etoposide": "#ff7f00",
+                  "Vehicle-ETP":'rgb(204, 97, 176)', "Non-treated":'rgb(36, 121, 108)', "Lovastatin":"#6a3d9a", "Orphenadrine":"#a6cee3",
                   "Tetracycline":'rgb(118, 78, 159)', "DMSO":'rgb(237, 100, 90)', "Lactose":'rgb(165, 170, 153)'}
         color_sequence = px.colors.qualitative.Vivid
     else:
@@ -337,7 +362,7 @@ def plot_umap_3d(df_plot, color_col, hover_cols, split_df = False, split_column 
         color_continuous_scale=px.colors.sequential.Bluered,
         color_discrete_sequence=color_sequence
         )
-        fig.update_traces(marker={'size': 12})
+        fig.update_traces(marker={'size': 5})
 
     fig.update_layout(
         dict(updatemenus=[
@@ -381,9 +406,17 @@ def plot_umap_3d(df_plot, color_col, hover_cols, split_df = False, split_column 
         )
         )
 
-    # fig.show("notebook")
+    config = {
+    'toImageButtonOptions': {
+        'format': 'svg', # one of png, svg, jpeg, webp
+        'filename': 'custom_image',
+        'height': 500,
+        'width': 700,
+        'scale':6 # Multiply title/legend/axis/canvas sizes by this factor
+    }
+    }
 
-    return fig.show("notebook")
+    return fig.show(config=config)
  
 def umap_search(df, n_neighbors_list = [5, 15, 30, 50], min_dist_list = [0, 0.01, 0.05, 0.1, 0.5, 1]):
     """
@@ -491,7 +524,6 @@ def tsne_generator(df, perplexity=40, n_components = 2, metric='cosine', noncano
 
     tsne = TSNE(n_components=n_components, random_state=42, perplexity=perplexity)
     X_tsne = tsne.fit_transform(X)
-    print(tsne.kl_divergence_)
 
     columns = [str(x) for x in range(0, n_components)]
 
@@ -505,7 +537,7 @@ def tsne_generator(df, perplexity=40, n_components = 2, metric='cosine', noncano
         for _ in range(num_runs):
             tsne = TSNE(n_components=n_components, random_state=42, perplexity=perplexity)
             embedding_tsne = tsne.fit_transform(X)  # Replace your_data with your actual data
-            print(tsne.kl_divergence_)
+            # print(tsne.kl_divergence_)
             tsne_embeddings.append(embedding_tsne)
         
         # Convert the list to a NumPy array for easier manipulation
@@ -514,9 +546,14 @@ def tsne_generator(df, perplexity=40, n_components = 2, metric='cosine', noncano
         # Calculate mean and standard deviation along each dimension
         mean_embedding = np.mean(tsne_results_array, axis=0)
         std_embedding = np.std(tsne_results_array, axis=0)
+
+        if n_components == 2:
+            error_cols = ['x_err', 'y_err']
+        else:
+            error_cols = [f"{str(x)}_err" for x in range(0, n_components)]
         
         # Dataframes
-        error_df = pd.DataFrame(data=std_embedding, columns=['x_err', 'y_err'])
+        error_df = pd.DataFrame(data=std_embedding, columns=error_cols)
         proj_df = pd.DataFrame(data=mean_embedding, columns=columns)
         tsne_df = pd.concat([proj_df, error_df, y], axis='columns')
     else:
@@ -547,7 +584,8 @@ def plot_tsne(df_plot, color_col, hover_cols, split_df = False, split_column = N
               neighbor=None, mindist=None, time_color=False,
               x="0", y="1", label_legend = "", title_plot="",
               symbol=False, symbol_col=None, symbol_list=None,
-              error_x=None, error_y=None, dili_color=False):
+              error_x=None, error_y=None, dili_color=False, k_means=False,
+              xaxis_title="TSNE 1", yaxis_title="TSNE 2"):
 
     if split_df:
         df = df_plot[df_plot[split_column] == np].reset_index()
@@ -556,10 +594,6 @@ def plot_tsne(df_plot, color_col, hover_cols, split_df = False, split_column = N
             title_plot = np + ' N: ' + str(neighbor) + ' M: ' + str(mindist)
     else:
         df = df_plot.copy()
-        # title_plot = 'Labeled by '+ color_col
-        # if umap_param:
-        #     title_plot = 'N: ' + str(neighbor) + ' M: ' + str(mindist)
-    #if the color_col is a int, sort the columns by value
     if df[color_col].map(type).eq(int).any():
         df.sort_values(color_col, inplace=True)
 
@@ -567,11 +601,15 @@ def plot_tsne(df_plot, color_col, hover_cols, split_df = False, split_column = N
         df['colors_plot_col'] = df[color_col].astype(str)
         color_sequence = px.colors.sequential.Plasma
         if time_color:
-            color_sequence = ['royalblue', 'green','orange','red']
+            # color_sequence = ['royalblue', 'green','orange','red']
+            color_sequence = {"1": '#4169E1', "15": '#008000', "30": 'orange', "0": 'orange'}
+            # df['colors_plot_col'] = df[color_col].map(color_sequence)
+        if k_means:
+            color_sequence = {"0":'rgb(229, 134, 6)', "1": 'rgb(153, 201, 69)'}
     elif dili_color:
         df['colors_plot_col'] = df[color_col]
-        color_discrete = {"Aspirin": 'rgb(229, 134, 6)', 'Amiodarone': 'rgb(93, 105, 177)', "Cyclophosphamide": 'rgb(82, 188, 163)', "Etoposide": 'rgb(153, 201, 69)',
-                  "Vehicle-ETP":'rgb(204, 97, 176)', "Non-treated":'rgb(36, 121, 108)', "Lovastatin":'rgb(218, 165, 27)', "Orphenadrine":'rgb(47, 138, 196)',
+        color_discrete = {"Aspirin": "#1f78b4", 'Amiodarone': "#33a02c", "Cyclophosphamide": "#e31a1c", "Etoposide": "#ff7f00",
+                  "Vehicle-ETP":'rgb(204, 97, 176)', "Non-treated":'rgb(36, 121, 108)', "Lovastatin":"#6a3d9a", "Orphenadrine":"#a6cee3",
                   "Tetracycline":'rgb(118, 78, 159)', "DMSO":'rgb(237, 100, 90)', "Lactose":'rgb(165, 170, 153)'}
         color_sequence = px.colors.qualitative.Vivid
     else:
@@ -615,7 +653,7 @@ def plot_tsne(df_plot, color_col, hover_cols, split_df = False, split_column = N
             hover_data=hover_cols,
             color_continuous_scale=px.colors.sequential.Bluered,
             size='Metadata_size',
-            color_discrete_sequence=color_sequence,
+            color_discrete_map=color_sequence,
             error_x=error_x, error_y=error_y
             )
     else:
@@ -648,8 +686,8 @@ def plot_tsne(df_plot, color_col, hover_cols, split_df = False, split_column = N
             t=50,
             pad=4
         ),
-        xaxis_title="TSNE X",
-        yaxis_title="TSNE Y"
+        xaxis_title=xaxis_title,
+        yaxis_title=yaxis_title
         )
     
     fig.update_traces(error_x=dict(thickness=2, color='black'), error_y=dict(
@@ -669,7 +707,6 @@ def plot_tsne(df_plot, color_col, hover_cols, split_df = False, split_column = N
         linecolor='black',
     )
 
-    # fig.show("notebook")
     config = {
     'toImageButtonOptions': {
         'format': 'svg', # one of png, svg, jpeg, webp
@@ -681,6 +718,179 @@ def plot_tsne(df_plot, color_col, hover_cols, split_df = False, split_column = N
     }
 
     return fig.show(config=config)
+
+def plot_samples_3d(df_plot, color_col, hover_cols,
+              discrete = False, size=False, size_col = None, 
+              time_color=False, dili_color=False,
+              x="0", y="1", z="2", label_legend = "", title_plot="",
+              error_x=None, error_y=None, error_z=None,
+              xaxis_title="TSNE X", yaxis_title="TSNE Y"):
+
+    df = df_plot.copy()
+    if df[color_col].map(type).eq(int).any():
+        df.sort_values(color_col, inplace=True)
+
+    if discrete:
+        df['colors_plot_col'] = df[color_col].astype(str)
+        color_sequence = px.colors.sequential.Plasma
+        if time_color:
+            color_sequence = ['royalblue', 'green','orange','red']
+    elif dili_color:
+        df['colors_plot_col'] = df[color_col]
+        color_discrete = {"Aspirin": "#1f78b4", 'Amiodarone': "#33a02c", "Cyclophosphamide": "#e31a1c", "Etoposide": "#ff7f00",
+                  "Vehicle-ETP":'rgb(204, 97, 176)', "Non-treated":'rgb(36, 121, 108)', "Lovastatin":"#6a3d9a", "Orphenadrine":"#a6cee3",
+                  "Tetracycline":'rgb(118, 78, 159)', "DMSO":'rgb(237, 100, 90)', "Lactose":'rgb(165, 170, 153)'}
+        color_sequence = px.colors.qualitative.Vivid
+    else:
+        df['colors_plot_col'] = df[color_col]
+        color_sequence = px.colors.qualitative.Vivid
+
+    if size:
+        df['Metadata_size'] = df[size_col].astype(int)
+        if not time_color:
+            df.sort_values('Metadata_size', inplace=True)
+        if dili_color:
+            fig = px.scatter_3d(
+            df, x=x, y=y, z=z,
+            color='colors_plot_col',
+            hover_data=hover_cols,
+            color_continuous_scale=px.colors.sequential.Bluered,
+            size='Metadata_size',
+            color_discrete_map=color_discrete,
+            error_x=error_x, error_y=error_y, error_z=error_z,
+            )
+            fig.update_traces(marker=dict(
+                              line=dict(width=1,
+                                        color='White')),
+                  selector=dict(mode='markers'))
+
+        else:
+            fig = px.scatter_3d(
+            df, x=x, y=y, z=z,
+            color='colors_plot_col',
+            hover_data=hover_cols,
+            color_continuous_scale=px.colors.sequential.Bluered,
+            size='Metadata_size',
+            color_discrete_sequence=color_sequence,
+            error_x=error_x, error_y=error_y, error_z=error_z,
+            )
+    else:
+        fig = px.scatter_3d(
+        df, x=x, y=y, z=z,
+        color='colors_plot_col',
+        hover_data=hover_cols,
+        color_continuous_scale=px.colors.sequential.Bluered,
+        color_discrete_sequence=color_sequence,
+        error_x=error_x, error_y=error_y, error_z=error_z,
+        )
+        fig.update_traces(marker=dict(
+                                      size=7,
+                              line=dict(width=1,
+                                        color='White')),
+                  selector=dict(mode='markers'))
+
+    fig.update_layout(plot_bgcolor='white',
+        font=dict(
+        size=18),
+        legend_title=label_legend,
+        title=title_plot,
+        autosize=False,
+        width=900,
+        height=700,
+        margin=dict(
+            l=50,
+            r=50,
+            b=20,
+            t=50,
+            pad=4
+        ),
+        xaxis_title=xaxis_title,
+        yaxis_title=yaxis_title
+        )
+    
+    fig.update_traces(error_x=dict(thickness=2, color='black'), error_y=dict(
+        color='black',
+        thickness=2,
+    ),)
+    fig.update_xaxes(
+    mirror=True,
+    ticks='outside',
+    showline=True,
+    linecolor='black',
+    )
+    fig.update_yaxes(
+        mirror=True,
+        ticks='outside',
+        showline=True,
+        linecolor='black',
+    )
+
+    config = {
+    'toImageButtonOptions': {
+        'format': 'svg', # one of png, svg, jpeg, webp
+        'filename': 'custom_image',
+        'height': 500,
+        'width': 700,
+        'scale':6 # Multiply title/legend/axis/canvas sizes by this factor
+    }
+    }
+
+    return fig.show(config=config)
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.lines import Line2D
+import seaborn as sns
+
+def plot_3d_scatter_with_errorbars(df, color_mapping, color_col, size_col='Metadata_NPSize_nm', alpha_main=0.7, alpha_error=0.5):
+    """
+    Generate a 3D scatter plot with error bars and a legend.
+
+    Parameters:
+    - df (DataFrame): DataFrame containing the data for the scatter plot.
+    - color_mapping (dict): Mapping of labels to custom colors for the legend.
+    - color_col (str): Column name for color values.
+    - size_col (str): Column name for size values. Default is 'Metadata_NPSize_nm'.
+    - alpha_main (float): Transparency for the main scatter plot. Default is 0.7.
+    - alpha_error (float): Transparency for the error bars. Default is 0.5.
+
+    Returns:
+    - None
+    """
+    # Map the labels in color_col to the custom colors with transparency
+    colors = df[color_col].map(color_mapping).map(lambda c: sns.color_palette([c])[0] + (0.5,))  # Adding alpha for transparency
+
+    # Set Seaborn style
+    sns.set(style="whitegrid")
+
+    fig = plt.figure(figsize=(12, 8))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Scatter plot for main points
+    scatter = ax.scatter(df["0"], df["1"], df["2"], c=colors, s=df[size_col], edgecolors='k', alpha=alpha_main)
+
+    # Scatter plot for error bars
+    ax.errorbar(df["0"], df["1"], df["2"], 
+                xerr=df['0_err'], yerr=df['1_err'], zerr=df['2_err'],
+                fmt='none', color='black', capsize=5, elinewidth=1, alpha=alpha_error)
+
+    # Create custom legend with labels from color_mapping
+    legend_elements = [Line2D([0], [0], marker='o', color='w', markerfacecolor=color_mapping[label], markersize=10, label=str(label)) for label in color_mapping]
+
+    # Add legend
+    ax.legend(handles=legend_elements, title=color_col)
+
+    # Customize plot as needed
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+
+    plt.show()
+
+# Example usage
+# plot_3d_scatter_with_errorbars(df, color_mapping, color_col="Metadata_Time")
+
+
 
 def generate_pca(df, n_components = 2, noncanonical_features=False):
     """
