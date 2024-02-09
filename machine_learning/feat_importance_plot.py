@@ -86,7 +86,10 @@ def feats_per_compartment_per_group_per_channel(compartments, features, groups, 
             temp = []
             # temp.append('Metadata_Compound_concentration')
             for feat in lst:
-                if g in feat.split("_")[1]:
+                # if any(subgroup in feat.split("_") for subgroup in g.split('_')):
+                parts = feat.split("_")
+                if len(parts) >= 4 and g in [parts[1], parts[3]]:
+                # if g in feat.split("_")[1]:
                     temp.append(feat)
             temp_group.append(temp)
         feat_per_cmp_per_group.append(temp_group)
@@ -137,20 +140,22 @@ def count_list_of_sublists(complex_list, feat_number):
 
     return number_feat_lst, percent_lst
 
-def plot_stacked_bar(df, x='Metadata_Time', ylabel="Percentage (%)", title="", colormap=None, rotation=45, percentage_fontsize=18):
+def plot_stacked_bar(df, x='Metadata_Time', ylabel="Percentage (%)", title="", colormap=None, rotation=45, percentage_fontsize=18, save_fig_title=None):
         ax = df.plot(x=x, 
                      kind='bar', 
                      stacked=True,
                      color=colormap)
         plt.rcParams.update({'font.size': percentage_fontsize})
         plt.legend(
-            loc='center left',
-            bbox_to_anchor=(1.0, 0.5), 
+            # loc='center left',
+            # bbox_to_anchor=(1.0, 0.5), 
+            loc='upper center',
+            bbox_to_anchor=(0.5, -0.1),
             reverse=True)
-        plt.ylabel(ylabel, fontsize=20)
+        plt.ylabel(ylabel, fontsize=18)
         plt.xlabel("")
         plt.xticks(rotation=rotation,fontsize=15)
-        plt.title(title,fontsize=20)
+        plt.title(title,fontsize=18)
         for p in ax.patches:
                 width, height = p.get_width(), p.get_height()
                 x, y = p.get_xy() 
@@ -161,6 +166,7 @@ def plot_stacked_bar(df, x='Metadata_Time', ylabel="Percentage (%)", title="", c
                                 '{:.0f}%'.format(height), 
                                 horizontalalignment='center', 
                                 verticalalignment='center')
+        plt.savefig(f"{save_fig_title}.svg")
         plt.show()
 
 def plot_stacked_bar_horizontal(df, x='Metadata_Time', ylabel="Percentage (%)", title="", colormap=None, rotation=45, percentage_fontsize=18):
