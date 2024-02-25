@@ -1,0 +1,9 @@
+adjustText==0.8
+combat==0.3.3
+easygui==0.98.3
+matplotlib-venn==0.11.9
+plotly==5.10.0
+pycombat==0.20
+pycytominer==1.0.1
+statannotations==0.5.0
+umap-learn==0.5.3
