@@ -29,7 +29,8 @@ def plot_and_stat(df, feature, x, palette, order_to_plot = [], hue_order_boxplot
                   new_labels=[], ylabel="", hue_col="Metadata_Time",
                   title_legend='Time (days)',
                   set_lim=False, xlim=None, ylim=None,
-                  perform_stat_test=True, add_legend=True, fontsize_xticks=10):
+                  perform_stat_test=True, add_legend=True, fontsize_xticks=10,
+                  plot_height=6, plot_aspect=3):
     """
     
     """
@@ -44,22 +45,24 @@ def plot_and_stat(df, feature, x, palette, order_to_plot = [], hue_order_boxplot
         df[feature].plot(kind='hist', title=feature)
         plt.show()
 
-    sns.set(font_scale=1.8)
+    sns.set(font_scale=1.9)
     sns.set_style("dark")
     g = sns.catplot(x=x,
                     y=feature,
                     hue=hue_col,
                     kind="box",
                     legend=False,
-                    height=6,
-                    aspect=3,
+                    height=plot_height,
+                    aspect=plot_aspect,
                     palette=palette,
-                    # boxprops={'alpha': 0.4},
-                    medianprops=dict(color="white", alpha=1),
+                    boxprops={'alpha': 0.4},
+                    # boxprops={'facecolor': 'white', 'edgecolor': palette},
+                    medianprops=dict(color="black", alpha=1, linewidth=2),
                     data=df,
                     order=order_to_plot,
                     hue_order=hue_order_boxplot,
-                    saturation=1
+                    saturation=1,
+                    dodge=False
                     )
     sns.stripplot(data=df, x=x,
                     y=feature,
@@ -75,6 +78,7 @@ def plot_and_stat(df, feature, x, palette, order_to_plot = [], hue_order_boxplot
                     )
     plt.xticks(rotation=rotation)
     plt.legend([],[], frameon=False)
+
     if add_legend:
         g.add_legend(title=title_legend)
     g.set(xlabel=None, title=feature, ylabel=ylabel)
@@ -87,7 +91,6 @@ def plot_and_stat(df, feature, x, palette, order_to_plot = [], hue_order_boxplot
         annot.reset_configuration()
         annot.new_plot(g.ax, pairs_stat, data=df, x=x, y=feature, order=order_to_plot)
         annot.configure(test=stat_test, text_format='star', loc='inside', verbose=2).apply_test().annotate()
-
     g.set_xticklabels(new_labels, fontsize=fontsize_xticks)
     fig = g.ax.get_figure()
     fig.savefig(f"{feature}.svg")
