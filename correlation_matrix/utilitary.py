@@ -39,6 +39,7 @@ def corr_matrix_per_plate(df_input, plates, plot_joined_replicates=False, metada
     *plates (list) is a list with the name of each plate you have in your assay/you want to calculate pearson coefficient to
     """
     cols_keep = pycytominer.cyto_utils.features.infer_cp_features(df_input, metadata=False)
+    cols_keep.append(metadata_column)
     #split df by plates
     if filter:
         df = df_input[df_input[filter_col].isin(filter_list)].reset_index()
@@ -63,6 +64,7 @@ def corr_matrix_per_plate(df_input, plates, plot_joined_replicates=False, metada
         for d in df_temp_list:
             df_TT = d[cols_keep]
             df_select_cols.append(df_TT)
+        # print(df_select_cols)
         #Set index as the metadata_column we created before and transpose the df
         df_transposed = []
         for d in df_select_cols:
