@@ -1,0 +1,514 @@
+CellProfiler Pipeline: http://www.cellprofiler.org
+Version:5
+DateRevision:425
+GitHash:
+ModuleCount:29
+HasImagePlaneDetails:False
+
+LoadData:[module_num:1|svn_version:'Unknown'|variable_revision_number:6|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Input data file location:Elsewhere...|X:\Fernanda\Doutorado\DILI\231011_183822_Plate_1\load_data_csv
+    Name of the file:load_data.csv
+    Load images based on this data?:Yes
+    Base image location:Default Input Folder|
+    Process just a range of rows?:No
+    Rows to process:1,100000
+    Group images by metadata?:Yes
+    Select metadata tags for grouping:Well,Site,Plate
+    Rescale intensities?:Yes
+
+RunCellpose:[module_num:2|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:AOGFP
+    Run CellPose in docker or local python environment:Python
+    Select Cellpose docker image:cellprofiler/runcellpose_with_pretrained:0.1
+    Expected object diameter:60
+    Detection mode:custom
+    Name the output object:NucleiCP
+    Use GPU:Yes
+    Use averaging:Yes
+    Supply nuclei image as well?:No
+    Select the nuclei image:None
+    Save probability image?:No
+    Name the probability image:Probabilities
+    Location of the pre-trained model file:Elsewhere...|X:\\Fernanda\\Doutorado\\workspace\\model\\AO
+    Pre-trained model file name:CP_20220729_LC2nuclei
+    Flow threshold:0.3
+    Cell probability threshold:1
+    GPU memory share for each worker:0.1
+    Stitch Threshold:0.0
+    Use 3D:No
+    Minimum size:15
+    Use Omnipose for mask reconstruction:1.0
+    Invert images:No
+    Remove objects that are touching the edge?:Yes
+
+FlagImage:[module_num:3|svn_version:'Unknown'|variable_revision_number:5|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Hidden:1
+    Hidden:1
+    Name the flag's category:Metadata
+    Name the flag:QCFlag
+    How should measurements be linked?:Flag if any fail
+    Skip image set if flagged?:Yes
+    Flag is based on:Whole-image measurement
+    Select the object to be used for flagging:None
+    Which measurement?:Count_NucleiCP
+    Flag images based on low values?:Yes
+    Minimum value:3
+    Flag images based on high values?:No
+    Maximum value:1.0
+    Rules file location:Elsewhere...|D:\\LowPainting\\analysis\\viability curve agnp\\analysis\\output\\QC
+    Rules file name:QC_empty_rules.txt
+    Class number:2
+    Allow fuzzy feature matching?:No
+    Ignore flag skips on last cycle?:No
+
+Smooth:[module_num:4|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:AOGFP
+    Name the output image:FilteredGFP
+    Select smoothing method:Gaussian Filter
+    Calculate artifact diameter automatically?:No
+    Typical artifact diameter:12
+    Edge intensity difference:0.1
+    Clip intensities to 0 and 1?:Yes
+
+IdentifySecondaryObjects:[module_num:5|svn_version:'Unknown'|variable_revision_number:10|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input objects:NucleiCP
+    Name the objects to be identified:Cells
+    Select the method to identify the secondary objects:Propagation
+    Select the input image:FilteredGFP
+    Number of pixels by which to expand the primary objects:10
+    Regularization factor:0.05
+    Discard secondary objects touching the border of the image?:Yes
+    Discard the associated primary objects?:Yes
+    Name the new primary objects:Nuclei
+    Fill holes in identified objects?:Yes
+    Threshold setting version:12
+    Threshold strategy:Global
+    Thresholding method:Otsu
+    Threshold smoothing scale:0.0
+    Threshold correction factor:.85
+    Lower and upper bounds on threshold:0.035,1.0
+    Manual threshold:0.0
+    Select the measurement to threshold with:None
+    Two-class or three-class thresholding?:Three classes
+    Log transform before thresholding?:Yes
+    Assign pixels in the middle intensity class to the foreground or the background?:Foreground
+    Size of adaptive window:50
+    Lower outlier fraction:0.05
+    Upper outlier fraction:0.05
+    Averaging method:Mean
+    Variance method:Standard deviation
+    # of deviations:2.0
+    Thresholding method:Otsu
+
+IdentifyTertiaryObjects:[module_num:6|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the larger identified objects:Cells
+    Select the smaller identified objects:Nuclei
+    Name the tertiary objects to be identified:Cytoplasm
+    Shrink smaller object prior to subtraction?:Yes
+
+RescaleIntensity:[module_num:7|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:AOPI
+    Name the output image:RescaleIntensityPI
+    Rescaling method:Match the image's maximum to another image's maximum
+    Method to calculate the minimum intensity:Custom
+    Method to calculate the maximum intensity:Custom
+    Lower intensity limit for the input image:0.0
+    Upper intensity limit for the input image:1.0
+    Intensity range for the input image:0.0,1.0
+    Intensity range for the output image:0.0,1.0
+    Select image to match in maximum intensity:AOGFP
+    Divisor value:1.0
+    Divisor measurement:None
+
+ImageMath:[module_num:8|svn_version:'Unknown'|variable_revision_number:5|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Operation:Add
+    Raise the power of the result by:1.0
+    Multiply the result by:1.0
+    Add to result:0.0
+    Set values less than 0 equal to 0?:Yes
+    Set values greater than 1 equal to 1?:Yes
+    Replace invalid values with 0?:Yes
+    Ignore the image masks?:No
+    Name the output image:ImageAfterMath2
+    Image or measurement?:Image
+    Select the first image:RescaleIntensityPI
+    Multiply the first image by:1
+    Measurement:
+    Image or measurement?:Image
+    Select the second image:AOGFP
+    Multiply the second image by:1
+    Measurement:
+
+EnhanceOrSuppressFeatures:[module_num:9|svn_version:'Unknown'|variable_revision_number:7|show_window:False|notes:['Enhance the speckles to facilitate identification in the next steps.']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:ImageAfterMath2
+    Name the output image:EnhanceJoin
+    Select the operation:Enhance
+    Feature size:20
+    Feature type:Speckles
+    Range of hole sizes:1,10
+    Smoothing scale:2.0
+    Shear angle:0.0
+    Decay:0.95
+    Enhancement method:Tubeness
+    Speed and accuracy:Slow
+    Rescale result image:No
+
+MaskImage:[module_num:10|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:EnhanceJoin
+    Name the output image:MaskJoin
+    Use objects or an image as a mask?:Objects
+    Select object for mask:Nuclei
+    Select image for mask:None
+    Invert the mask?:No
+
+Smooth:[module_num:11|svn_version:'Unknown'|variable_revision_number:2|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:MaskJoin
+    Name the output image:FilteredImageJoin
+    Select smoothing method:Gaussian Filter
+    Calculate artifact diameter automatically?:No
+    Typical artifact diameter:4
+    Edge intensity difference:0.1
+    Clip intensities to 0 and 1?:Yes
+
+IdentifyPrimaryObjects:[module_num:12|svn_version:'Unknown'|variable_revision_number:15|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:FilteredImageJoin
+    Name the primary objects to be identified:Nucleoli
+    Typical diameter of objects, in pixel units (Min,Max):5,25
+    Discard objects outside the diameter range?:Yes
+    Discard objects touching the border of the image?:Yes
+    Method to distinguish clumped objects:Intensity
+    Method to draw dividing lines between clumped objects:Intensity
+    Size of smoothing filter:0
+    Suppress local maxima that are closer than this minimum allowed distance:3
+    Speed up by using lower-resolution image to find local maxima?:No
+    Fill holes in identified objects?:After both thresholding and declumping
+    Automatically calculate size of smoothing filter for declumping?:No
+    Automatically calculate minimum allowed distance between local maxima?:No
+    Handling of objects if excessive number of objects identified:Continue
+    Maximum number of objects:500
+    Use advanced settings?:Yes
+    Threshold setting version:12
+    Threshold strategy:Adaptive
+    Thresholding method:Otsu
+    Threshold smoothing scale:1.3488
+    Threshold correction factor:3.4
+    Lower and upper bounds on threshold:0.01,1.0
+    Manual threshold:0.0
+    Select the measurement to threshold with:None
+    Two-class or three-class thresholding?:Three classes
+    Log transform before thresholding?:Yes
+    Assign pixels in the middle intensity class to the foreground or the background?:Foreground
+    Size of adaptive window:300
+    Lower outlier fraction:0.05
+    Upper outlier fraction:0.05
+    Averaging method:Mean
+    Variance method:Standard deviation
+    # of deviations:2.0
+    Thresholding method:Otsu
+
+EnhanceOrSuppressFeatures:[module_num:13|svn_version:'Unknown'|variable_revision_number:7|show_window:False|notes:['Enhance the speckles to facilitate identification in the next steps.']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:AOPI
+    Name the output image:EnhancePI
+    Select the operation:Enhance
+    Feature size:15
+    Feature type:Speckles
+    Range of hole sizes:1,10
+    Smoothing scale:2.0
+    Shear angle:0.0
+    Decay:0.95
+    Enhancement method:Tubeness
+    Speed and accuracy:Slow
+    Rescale result image:No
+
+MaskImage:[module_num:14|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:['Mask image with the cytoplasm objects, then the resulted image will contain only speckles inside the cell.']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:EnhancePI
+    Name the output image:MaskPI
+    Use objects or an image as a mask?:Objects
+    Select object for mask:Cytoplasm
+    Select image for mask:None
+    Invert the mask?:No
+
+IdentifyPrimaryObjects:[module_num:15|svn_version:'Unknown'|variable_revision_number:15|show_window:False|notes:['Identify the vesicles.']|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:MaskPI
+    Name the primary objects to be identified:Vesicles
+    Typical diameter of objects, in pixel units (Min,Max):1,15
+    Discard objects outside the diameter range?:Yes
+    Discard objects touching the border of the image?:No
+    Method to distinguish clumped objects:Intensity
+    Method to draw dividing lines between clumped objects:Intensity
+    Size of smoothing filter:10
+    Suppress local maxima that are closer than this minimum allowed distance:7.0
+    Speed up by using lower-resolution image to find local maxima?:Yes
+    Fill holes in identified objects?:After both thresholding and declumping
+    Automatically calculate size of smoothing filter for declumping?:Yes
+    Automatically calculate minimum allowed distance between local maxima?:Yes
+    Handling of objects if excessive number of objects identified:Continue
+    Maximum number of objects:500
+    Use advanced settings?:Yes
+    Threshold setting version:12
+    Threshold strategy:Adaptive
+    Thresholding method:Otsu
+    Threshold smoothing scale:1.3488
+    Threshold correction factor:1.0
+    Lower and upper bounds on threshold:0.05,1.0
+    Manual threshold:0.0
+    Select the measurement to threshold with:None
+    Two-class or three-class thresholding?:Three classes
+    Log transform before thresholding?:No
+    Assign pixels in the middle intensity class to the foreground or the background?:Foreground
+    Size of adaptive window:300
+    Lower outlier fraction:0.05
+    Upper outlier fraction:0.05
+    Averaging method:Mean
+    Variance method:Standard deviation
+    # of deviations:2.0
+    Thresholding method:Otsu
+
+MeasureColocalization:[module_num:16|svn_version:'Unknown'|variable_revision_number:5|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:True]
+    Select images to measure:AOGFP, AOPI
+    Set threshold as percentage of maximum intensity for the images:15.0
+    Select where to measure correlation:Within objects
+    Select objects to measure:Nuclei
+    Run all metrics?:Yes
+    Calculate correlation and slope metrics?:Yes
+    Calculate the Manders coefficients?:Yes
+    Calculate the Rank Weighted Colocalization coefficients?:Yes
+    Calculate the Overlap coefficients?:Yes
+    Calculate the Manders coefficients using Costes auto threshold?:Yes
+    Method for Costes thresholding:Faster
+
+MeasureGranularity:[module_num:17|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select images to measure:AOGFP, AOPI
+    Measure within objects?:Yes
+    Select objects to measure:Cells, Cytoplasm, Nuclei
+    Subsampling factor for granularity measurements:0.25
+    Subsampling factor for background reduction:0.25
+    Radius of structuring element:3
+    Range of the granular spectrum:10
+
+MeasureObjectIntensityDistribution:[module_num:18|svn_version:'Unknown'|variable_revision_number:6|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select images to measure:AOGFP, AOPI
+    Hidden:1
+    Hidden:1
+    Hidden:0
+    Calculate intensity Zernikes?:None
+    Maximum zernike moment:9
+    Select objects to measure:Cells
+    Object to use as center?:These objects
+    Select objects to use as centers:None
+    Scale the bins?:Yes
+    Number of bins:4
+    Maximum radius:100
+
+MeasureObjectIntensity:[module_num:19|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select images to measure:AOGFP, AOPI
+    Select objects to measure:Cells, Cytoplasm, Nuclei, Nucleoli, Vesicles
+
+MeasureObjectSizeShape:[module_num:20|svn_version:'Unknown'|variable_revision_number:3|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select object sets to measure:Cells, Cytoplasm, Nuclei, Nucleoli, Vesicles
+    Calculate the Zernike features?:Yes
+    Calculate the advanced features?:Yes
+
+MeasureTexture:[module_num:21|svn_version:'Unknown'|variable_revision_number:7|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select images to measure:AOGFP, AOPI
+    Select objects to measure:Cells, Cytoplasm, Nuclei
+    Enter how many gray levels to measure the texture at:256
+    Hidden:3
+    Measure whole images or objects?:Both
+    Texture scale to measure:5
+    Texture scale to measure:10
+    Texture scale to measure:20
+
+RelateObjects:[module_num:22|svn_version:'Unknown'|variable_revision_number:5|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Parent objects:Cells
+    Child objects:Vesicles
+    Calculate child-parent distances?:None
+    Calculate per-parent means for all child measurements?:Yes
+    Calculate distances to other parents?:No
+    Do you want to save the children with parents as a new object set?:No
+    Name the output object:RelateObjects
+    Parent name:None
+
+RelateObjects:[module_num:23|svn_version:'Unknown'|variable_revision_number:5|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Parent objects:Nuclei
+    Child objects:Nucleoli
+    Calculate child-parent distances?:None
+    Calculate per-parent means for all child measurements?:Yes
+    Calculate distances to other parents?:No
+    Do you want to save the children with parents as a new object set?:No
+    Name the output object:RelateObjects
+    Parent name:None
+
+OverlayOutlines:[module_num:24|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Display outlines on a blank image?:Yes
+    Select image on which to display outlines:CorrGFP
+    Name the output image:NucleiOutlines
+    Outline display mode:Color
+    Select method to determine brightness of outlines:Max of image
+    How to outline:Inner
+    Select outline color:green
+    Select objects to display:Nuclei
+
+OverlayOutlines:[module_num:25|svn_version:'Unknown'|variable_revision_number:4|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Display outlines on a blank image?:Yes
+    Select image on which to display outlines:CorrGFP
+    Name the output image:CellOutlines
+    Outline display mode:Color
+    Select method to determine brightness of outlines:Max of image
+    How to outline:Inner
+    Select outline color:cyan
+    Select objects to display:Nuclei
+    Select outline color:Yellow
+    Select objects to display:Cells
+
+SaveImages:[module_num:26|svn_version:'Unknown'|variable_revision_number:16|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:True]
+    Select the type of image to save:Image
+    Select the image to save:NucleiOutlines
+    Select method for constructing file names:Single name
+    Select image name for file prefix:None
+    Enter single file name:\g<Well>_s\g<Site>_nuclei_outlines
+    Number of digits:4
+    Append a suffix to the image file name?:No
+    Text to append to the image name:
+    Saved file format:tiff
+    Output file location:Default Output Folder sub-folder|\g<Plate>_Nuclei_Outlines
+    Image bit depth:8-bit integer
+    Overwrite existing files without warning?:No
+    When to save:Every cycle
+    Record the file and path information to the saved image?:No
+    Create subfolders in the output folder?:No
+    Base image folder:Elsewhere...|
+    How to save the series:T (Time)
+    Save with lossless compression?:No
+
+SaveImages:[module_num:27|svn_version:'Unknown'|variable_revision_number:16|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the type of image to save:Image
+    Select the image to save:CellOutlines
+    Select method for constructing file names:Single name
+    Select image name for file prefix:None
+    Enter single file name:\g<Well>_s\g<Site>_cell_outlines
+    Number of digits:4
+    Append a suffix to the image file name?:No
+    Text to append to the image name:
+    Saved file format:tiff
+    Output file location:Default Output Folder sub-folder|\g<Plate>_Cell_Outlines
+    Image bit depth:8-bit integer
+    Overwrite existing files without warning?:Yes
+    When to save:Every cycle
+    Record the file and path information to the saved image?:No
+    Create subfolders in the output folder?:No
+    Base image folder:Elsewhere...|
+    How to save the series:T (Time)
+    Save with lossless compression?:No
+
+ExportToSpreadsheet:[module_num:28|svn_version:'Unknown'|variable_revision_number:13|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Select the column delimiter:Comma (",")
+    Add image metadata columns to your object data file?:No
+    Add image file and folder names to your object data file?:No
+    Select the measurements to export:No
+    Calculate the per-image mean values for object measurements?:No
+    Calculate the per-image median values for object measurements?:No
+    Calculate the per-image standard deviation values for object measurements?:No
+    Output file location:Default Output Folder|
+    Create a GenePattern GCT file?:No
+    Select source of sample row name:Metadata
+    Select the image to use as the identifier:None
+    Select the metadata to use as the identifier:None
+    Export all measurement types?:No
+    Press button to select measurements:Image|Scaling_OrigProtein,Image|Scaling_OrigDsRed,Image|Scaling_OrigLysosomes,Image|Scaling_OrigDNA,Image|Scaling_IllumDNA,Image|Scaling_IllumProtein,Image|Scaling_IllumLysosomes,Image|Scaling_IllumDsRed,Image|PathName_IllumProtein,Image|PathName_IllumDsRed,Image|PathName_OrigLysosomes,Image|PathName_IllumDNA,Image|PathName_IllumLysosomes,Image|PathName_OrigDsRed,Image|PathName_OrigDNA,Image|PathName_OrigProtein,Image|FileName_IllumProtein,Image|FileName_IllumLysosomes,Image|FileName_OrigProtein,Image|FileName_OrigLysosomes,Image|FileName_OrigDsRed,Image|FileName_IllumDsRed,Image|FileName_OrigDNA,Image|FileName_IllumDNA,Image|MD5Digest_OrigLysosomes,Image|MD5Digest_OrigDNA,Image|MD5Digest_OrigDsRed,Image|MD5Digest_IllumProtein,Image|MD5Digest_IllumLysosomes,Image|MD5Digest_IllumDNA,Image|MD5Digest_OrigProtein,Image|MD5Digest_IllumDsRed,Image|Metadata_ObjectiveNA,Image|Metadata_ChannelID,Image|Metadata_BinningY,Image|Metadata_PositionY,Image|Metadata_ObjectiveMagnification,Image|Metadata_MainExcitationWavelength,Image|Metadata_FieldID,Image|Metadata_ImageSizeX,Image|Metadata_Plate,Image|Metadata_AbsTime,Image|Metadata_ExposureTime,Image|Metadata_PositionZ,Image|Metadata_MaxIntensity,Image|Metadata_Well,Image|Metadata_ChannelName,Image|Metadata_ImageSizeY,Image|Metadata_ImageResolutionX,Image|Metadata_Row,Image|Metadata_BinningX,Image|Metadata_MainEmissionWavelength,Image|Metadata_Site,Image|Metadata_ImageResolutionY,Image|Metadata_PlaneID,Image|Metadata_AbsPositionZ,Image|Metadata_QCFlag,Image|Metadata_Col,Image|Metadata_PositionX,Image|Threshold_FinalThreshold_UnfilteredNuclei,Image|Threshold_FinalThreshold_Lysosomes,Image|Threshold_FinalThreshold_ThresholdDsRed,Image|Threshold_FinalThreshold_UnfilteredCells,Image|Threshold_WeightedVariance_ThresholdDsRed,Image|Threshold_WeightedVariance_UnfilteredNuclei,Image|Threshold_WeightedVariance_UnfilteredCells,Image|Threshold_WeightedVariance_Lysosomes,Image|Threshold_OrigThreshold_ThresholdDsRed,Image|Threshold_OrigThreshold_UnfilteredNuclei,Image|Threshold_OrigThreshold_Lysosomes,Image|Threshold_OrigThreshold_UnfilteredCells,Image|Threshold_GuideThreshold_Lysosomes,Image|Threshold_SumOfEntropies_Lysosomes,Image|Threshold_SumOfEntropies_ThresholdDsRed,Image|Threshold_SumOfEntropies_UnfilteredNuclei,Image|Threshold_SumOfEntropies_UnfilteredCells,Image|Width_OrigProtein,Image|Width_IllumDsRed,Image|Width_OrigDNA,Image|Width_IllumDNA,Image|Width_OrigLysosomes,Image|Width_OrigDsRed,Image|Width_IllumProtein,Image|Width_IllumLysosomes,Image|Intensity_MeanIntensity_DsRed,Image|Intensity_LowerQuartileIntensity_DsRed,Image|Intensity_TotalArea_DsRed,Image|Intensity_PercentMaximal_DsRed,Image|Intensity_TotalIntensity_DsRed,Image|Intensity_MaxIntensity_DsRed,Image|Intensity_StdIntensity_DsRed,Image|Intensity_MedianIntensity_DsRed,Image|Intensity_UpperQuartileIntensity_DsRed,Image|Intensity_MinIntensity_DsRed,Image|Intensity_MADIntensity_DsRed,Image|Height_IllumLysosomes,Image|Height_IllumProtein,Image|Height_OrigProtein,Image|Height_OrigLysosomes,Image|Height_IllumDsRed,Image|Height_IllumDNA,Image|Height_OrigDsRed,Image|Height_OrigDNA,Image|Count_UnfilteredCells,Image|Count_Nuclei,Image|Count_UnfilteredNuclei,Image|Count_Lysosomes,Image|Count_Cells,Image|Group_Index,Image|Group_Number,Image|ModuleError_16IdentifyPrimaryObjects,Image|ModuleError_09FlagImage,Image|ModuleError_30SaveImages,Image|ModuleError_05RescaleIntensity,Image|ModuleError_13CorrectIlluminationCalculate,Image|ModuleError_22EnhanceOrSuppressFeatures,Image|ModuleError_11CorrectIlluminationCalculate,Image|ModuleError_23IdentifyPrimaryObjects,Image|ModuleError_29OverlayOutlines,Image|ModuleError_01LoadData,Image|ModuleError_31SaveImages,Image|ModuleError_10ImageMath,Image|ModuleError_08MeasureImageIntensity,Image|ModuleError_26ImageMath,Image|ModuleError_20MeasureObjectSizeShape,Image|ModuleError_04ImageMath,Image|ModuleError_24RelateObjects,Image|ModuleError_25RescaleIntensity,Image|ModuleError_27OverlayOutlines,Image|ModuleError_03CorrectIlluminationApply,Image|ModuleError_17Threshold,Image|ModuleError_19IdentifySecondaryObjects,Image|ModuleError_28OverlayOutlines,Image|ModuleError_14CorrectIlluminationApply,Image|ModuleError_15MedianFilter,Image|ModuleError_18MaskObjects,Image|ModuleError_32SaveImages,Image|ModuleError_21FilterObjects,Image|ModuleError_02FlagImage,Image|ModuleError_06SaveImages,Image|ModuleError_12CorrectIlluminationApply,Image|ModuleError_07Smooth,Image|ExecutionTime_08MeasureImageIntensity,Image|ExecutionTime_12CorrectIlluminationApply,Image|ExecutionTime_28OverlayOutlines,Image|ExecutionTime_04ImageMath,Image|ExecutionTime_15MedianFilter,Image|ExecutionTime_22EnhanceOrSuppressFeatures,Image|ExecutionTime_11CorrectIlluminationCalculate,Image|ExecutionTime_16IdentifyPrimaryObjects,Image|ExecutionTime_06SaveImages,Image|ExecutionTime_07Smooth,Image|ExecutionTime_27OverlayOutlines,Image|ExecutionTime_03CorrectIlluminationApply,Image|ExecutionTime_13CorrectIlluminationCalculate,Image|ExecutionTime_21FilterObjects,Image|ExecutionTime_30SaveImages,Image|ExecutionTime_05RescaleIntensity,Image|ExecutionTime_19IdentifySecondaryObjects,Image|ExecutionTime_02FlagImage,Image|ExecutionTime_18MaskObjects,Image|ExecutionTime_26ImageMath,Image|ExecutionTime_17Threshold,Image|ExecutionTime_23IdentifyPrimaryObjects,Image|ExecutionTime_10ImageMath,Image|ExecutionTime_31SaveImages,Image|ExecutionTime_32SaveImages,Image|ExecutionTime_14CorrectIlluminationApply,Image|ExecutionTime_25RescaleIntensity,Image|ExecutionTime_01LoadData,Image|ExecutionTime_29OverlayOutlines,Image|ExecutionTime_20MeasureObjectSizeShape,Image|ExecutionTime_09FlagImage,Image|ExecutionTime_24RelateObjects,Image|Measurement_NoDsRedCells,Image|URL_OrigLysosomes,Image|URL_OrigProtein,Image|URL_OrigDsRed,Image|URL_IllumProtein,Image|URL_IllumDsRed,Image|URL_IllumLysosomes,Image|URL_IllumDNA,Image|URL_OrigDNA
+    Representation of Nan/Inf:NaN
+    Add a prefix to file names?:No
+    Filename prefix:MyExpt_
+    Overwrite existing files without warning?:No
+    Data to export:Image
+    Combine these object measurements with those of the previous object?:No
+    File name:DATA.csv
+    Use the object name for the file name?:Yes
+    Data to export:Experiment
+    Combine these object measurements with those of the previous object?:No
+    File name:DATA.csv
+    Use the object name for the file name?:Yes
+    Data to export:Object relationships
+    Combine these object measurements with those of the previous object?:No
+    File name:DATA.csv
+    Use the object name for the file name?:Yes
+    Data to export:Cells
+    Combine these object measurements with those of the previous object?:No
+    File name:DATA.csv
+    Use the object name for the file name?:Yes
+    Data to export:Nuclei
+    Combine these object measurements with those of the previous object?:No
+    File name:DATA.csv
+    Use the object name for the file name?:Yes
+    Data to export:Cytoplasm
+    Combine these object measurements with those of the previous object?:No
+    File name:DATA.csv
+    Use the object name for the file name?:Yes
+    Data to export:Nucleoli
+    Combine these object measurements with those of the previous object?:No
+    File name:DATA.csv
+    Use the object name for the file name?:Yes
+    Data to export:Vesicles
+    Combine these object measurements with those of the previous object?:No
+    File name:DATA.csv
+    Use the object name for the file name?:Yes
+
+ExportToDatabase:[module_num:29|svn_version:'Unknown'|variable_revision_number:28|show_window:False|notes:[]|batch_state:array([], dtype=uint8)|enabled:True|wants_pause:False]
+    Database type:SQLite
+    Database name:DefaultDB
+    Add a prefix to table names?:No
+    Table prefix:MyExpt_
+    Output file location:Default Output Folder|
+    Create a CellProfiler Analyst properties file?:No
+    Database host:
+    Username:
+    Password:
+    Name the SQLite database file:231011_183822_Plate_1.db
+    Calculate the per-image mean values of object measurements?:No
+    Calculate the per-image median values of object measurements?:No
+    Calculate the per-image standard deviation values of object measurements?:No
+    Calculate the per-well mean values of object measurements?:No
+    Calculate the per-well median values of object measurements?:No
+    Calculate the per-well standard deviation values of object measurements?:No
+    Export measurements for all objects to the database?:Select...
+    Select the objects:Cells,Cytoplasm,Nuclei
+    Maximum # of characters in a column name:64
+    Create one table per object, a single object table or a single object view?:One table per object type
+    Enter an image url prepend if you plan to access your files via http:
+    Write image thumbnails directly to the database?:No
+    Select the images for which you want to save thumbnails:
+    Auto-scale thumbnail pixel intensities?:Yes
+    Select the plate type:None
+    Select the plate metadata:None
+    Select the well metadata:None
+    Include information for all images, using default values?:Yes
+    Properties image group count:1
+    Properties group field count:1
+    Properties filter field count:0
+    Workspace measurement count:1
+    Experiment name:231011_183822_Plate_1
+    Which objects should be used for locations?:None
+    Enter a phenotype class table name if using the Classifier tool in CellProfiler Analyst:
+    Export object relationships?:Yes
+    Overwrite without warning?:Never
+    Access CellProfiler Analyst images via URL?:No
+    Select the classification type:Object
+    Select an image to include:None
+    Use the image name for the display?:Yes
+    Image name:Channel1
+    Channel color:red
+    Do you want to add group fields?:No
+    Enter the name of the group:
+    Enter the per-image columns which define the group, separated by commas:ImageNumber, Image_Metadata_Plate, Image_Metadata_Well
+    Do you want to add filter fields?:No
+    Automatically create a filter for each plate?:No
+    Create a CellProfiler Analyst workspace file?:No
+    Select the measurement display tool:ScatterPlot
+    Type of measurement to plot on the X-axis:Image
+    Enter the object name:None
+    Select the X-axis measurement:None
+    Select the X-axis index:ImageNumber
+    Type of measurement to plot on the Y-axis:Image
+    Enter the object name:None
+    Select the Y-axis measurement:None
+    Select the Y-axis index:ImageNumber
